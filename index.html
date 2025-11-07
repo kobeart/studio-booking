@@ -25,7 +25,7 @@
 
     let selectedStudio = null;
     let selectedDate = null;
-    let selectedSlots = [];
+    let selectedSlots = []; // {date, dayName, hour, studio}
 
     const studioInfo = {
       A: { color: "#ffb6c1", price: 1100 },
@@ -46,13 +46,11 @@
 
     window.selectStudio = (studio) => {
       selectedStudio = studio;
-      selectedSlots = [];
       document.querySelectorAll(".studio-btn").forEach(btn => btn.classList.remove("active"));
       const activeBtn = document.getElementById(`studio-${studio}`);
       activeBtn.classList.add("active");
       renderCalendar();
       document.getElementById("time-slots").innerHTML = "";
-      document.getElementById("selected-info").innerHTML = "";
     };
 
     let currentDate = new Date();
@@ -83,7 +81,6 @@
       const daysDiv = document.createElement("div");
       daysDiv.classList.add("days");
 
-      // 月曜始まり調整
       let blankDays = (firstDay.getDay() + 6) % 7;
       for (let i = 0; i < blankDays; i++) {
         const blank = document.createElement("div");
@@ -168,22 +165,22 @@
         }
         grid.appendChild(slotEl);
       }
-
-      document.getElementById("selected-info").innerHTML = "";
     }
 
     function toggleSlot(slotId, hour, time, el, dayName) {
       const price = studioInfo[selectedStudio].price;
-      const dateLabel = `${selectedDate}（${dayName}）${hour}時－${hour + 1}時　スタジオ${selectedStudio}　${price}円`;
+      const bookingKey = `${selectedDate}_${selectedStudio}_${hour}`;
+      const label = `${selectedDate}（${dayName}）${hour}時－${hour + 1}時　スタジオ${selectedStudio}　${price}円`;
 
-      if (selectedSlots.includes(slotId)) {
-        selectedSlots = selectedSlots.filter((s) => s !== slotId);
+      const existing = selectedSlots.find(s => s.key === bookingKey);
+      if (existing) {
+        selectedSlots = selectedSlots.filter(s => s.key !== bookingKey);
         el.classList.remove("selected-slot");
-        removeSelectedInfo(dateLabel);
+        removeSelectedInfo(label);
       } else {
-        selectedSlots.push(slotId);
+        selectedSlots.push({ key: bookingKey, date: selectedDate, studio: selectedStudio, hour, label });
         el.classList.add("selected-slot");
-        addSelectedInfo(dateLabel);
+        addSelectedInfo(label);
       }
       updateTotal();
     }
@@ -203,27 +200,26 @@
     }
 
     function updateTotal() {
-      const total = selectedSlots.length * studioInfo[selectedStudio].price;
+      const total = selectedSlots.reduce((sum, s) => sum + studioInfo[s.studio].price, 0);
       document.getElementById("total-price").textContent = `合計金額：${total.toLocaleString()}円（税込）`;
     }
 
     window.confirmBooking = async () => {
-      if (!selectedStudio || !selectedDate || selectedSlots.length === 0) {
-        alert("スタジオ・日付・時間を選択してください。");
+      if (selectedSlots.length === 0) {
+        alert("予約枠を選択してください。");
         return;
       }
 
       const user = auth.currentUser;
       if (!user) return alert("ログインが必要です。");
 
-      const confirmMsg = `以下の内容で予約を確定します。\n\nスタジオ: ${selectedStudio}\n日付: ${selectedDate}\n時間: ${selectedSlots.join(", ")}時\n\nキャンセル料規定が適用されます。`;
-      if (!confirm(confirmMsg)) return;
+      if (!confirm("選択中の予約をすべて確定しますか？\nキャンセル料規定が適用されます。")) return;
 
-      for (const slotId of selectedSlots) {
-        await setDoc(doc(db, "reservations", `${selectedStudio}_${selectedDate}_${slotId}`), {
-          studio: selectedStudio,
-          date: selectedDate,
-          hour: slotId,
+      for (const s of selectedSlots) {
+        await setDoc(doc(db, "reservations", `${s.studio}_${s.date}_${s.hour}`), {
+          studio: s.studio,
+          date: s.date,
+          hour: s.hour,
           user: user.email,
           createdAt: new Date().toISOString(),
         });
@@ -257,19 +253,20 @@
       font-weight: bold;
     }
     .studio-btns {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 1rem;
-      gap: 0.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+      max-width: 700px;
+      margin: 1rem auto;
     }
     .studio-btn {
-      padding: 1rem 1.5rem;
+      padding: 0.6rem;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
       color: #000;
+      height: 50px;
       transition: transform 0.2s;
     }
     .studio-btn.active {
@@ -280,7 +277,7 @@
     }
     @keyframes pulse {
       0%,100% { box-shadow: 0 0 10px #fff; }
-      50% { box-shadow: 0 0 20px #7ec8ff; }
+      50% { box-shadow: 0 0 20px gold; }
     }
     #calendar {
       margin: 1rem auto;
@@ -324,6 +321,10 @@
       color: #000;
       font-weight: bold;
       cursor: pointer;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .slot.booked {
       background: #777 !important;
@@ -331,12 +332,21 @@
       cursor: not-allowed;
     }
     .selected-slot {
-      outline: 3px solid #fff;
+      outline: 3px solid gold;
+      animation: glow 1s infinite alternate;
+    }
+    @keyframes glow {
+      from { box-shadow: 0 0 10px gold; }
+      to { box-shadow: 0 0 20px white; }
     }
     #selected-info {
       margin-top: 1rem;
       font-size: 0.95rem;
       line-height: 1.6;
+      text-align: left;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
     }
     #total-price {
       font-size: 1.1rem;
@@ -371,11 +381,11 @@
 
   <h2>スタジオを選択してください</h2>
   <div class="studio-btns">
-    <button id="studio-A" class="studio-btn" style="background:#ffb6c1" onclick="selectStudio('A')">スタジオA<br>¥1,100</button>
-    <button id="studio-B" class="studio-btn" style="background:#add8e6" onclick="selectStudio('B')">スタジオB<br>¥1,100</button>
-    <button id="studio-C" class="studio-btn" style="background:#90ee90" onclick="selectStudio('C')">スタジオC<br>¥1,980</button>
-    <button id="studio-EF" class="studio-btn" style="background:#66a3ff" onclick="selectStudio('EF')">スタジオEF<br>¥2,310</button>
-    <button id="studio-R" class="studio-btn" style="background:#fffacd" onclick="selectStudio('R')">スタジオR<br>¥2,090</button>
+    <button id="studio-A" class="studio-btn" style="background:#ffb6c1" onclick="selectStudio('A')">A<br>¥1,100</button>
+    <button id="studio-B" class="studio-btn" style="background:#add8e6" onclick="selectStudio('B')">B<br>¥1,100</button>
+    <button id="studio-C" class="studio-btn" style="background:#90ee90" onclick="selectStudio('C')">C<br>¥1,980</button>
+    <button id="studio-EF" class="studio-btn" style="background:#66a3ff" onclick="selectStudio('EF')">EF<br>¥2,310</button>
+    <button id="studio-R" class="studio-btn" style="background:#fffacd" onclick="selectStudio('R')">R<br>¥2,090</button>
   </div>
 
   <div id="calendar-controls">
