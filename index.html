@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>スタジオ予約 | 神戸芸術センター</title>
 
   <script type="module">
@@ -28,18 +28,23 @@
       A: { color: "#ffb6c1", price: 1100 },
       B: { color: "#add8e6", price: 1100 },
       C: { color: "#90ee90", price: 1980 },
-      EF: { color: "#66a3ff", price: 2310 },
+      EF:{ color: "#66a3ff", price: 2310 },
       R: { color: "#fffacd", price: 2090 },
     };
 
     let selectedDate = null;
-    let selectedSlots = [];
+    let selectedSlots = []; // [{key, studio, hour, label}]
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) window.location.href = "register.html";
-      else document.getElementById("user-email").textContent = user.email;
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = "register.html";
+      } else {
+        const el = document.getElementById("user-email");
+        if (el) el.textContent = user.email;
+      }
     });
 
+    // --- calendar ---
     let currentDate = new Date();
 
     function renderCalendar() {
@@ -51,197 +56,263 @@
       const lastDay = new Date(year, month + 1, 0);
       const today = new Date();
 
-      document.getElementById("calendar-title").textContent = `${year}年${month + 1}月`;
+      document.getElementById("calendar-title").textContent = `${year}年${month+1}月`;
 
+      // weekdays (Mon-first)
       const weekdays = ["月","火","水","木","金","土","日"];
       const header = document.createElement("div");
-      header.classList.add("weekdays");
+      header.className = "weekdays";
       weekdays.forEach(w=>{
-        const el=document.createElement("div");
-        el.textContent=w;
-        if(w==="日") el.style.color="#ff8080";
-        if(w==="土") el.style.color="#7ec8ff";
-        header.appendChild(el);
+        const d = document.createElement("div");
+        d.textContent = w;
+        if(w==="日") d.style.color="#ff8080";
+        if(w==="土") d.style.color="#7ec8ff";
+        header.appendChild(d);
       });
       calendar.appendChild(header);
 
       const daysDiv = document.createElement("div");
-      daysDiv.classList.add("days");
+      daysDiv.className = "days";
 
+      // blank days for month starting Monday
       let blankDays = (firstDay.getDay() + 6) % 7;
-      for(let i=0;i<blankDays;i++){
-        const blank=document.createElement("div");
-        blank.classList.add("day","blank");
-        daysDiv.appendChild(blank);
+      for (let i=0;i<blankDays;i++){
+        const b = document.createElement("div");
+        b.className = "day blank";
+        daysDiv.appendChild(b);
       }
 
-      for(let d=1;d<=lastDay.getDate();d++){
-        const dateObj=new Date(year,month,d);
-        const dayOfWeek=dateObj.getDay();
-        const el=document.createElement("div");
-        el.classList.add("day");
-        el.textContent=d;
-        if(dayOfWeek===0) el.style.color="#ff8080";
-        if(dayOfWeek===6) el.style.color="#7ec8ff";
-        const isPast=dateObj<new Date(today.getFullYear(),today.getMonth(),today.getDate());
-        if(!isPast){el.onclick=()=>selectDate(year,month+1,d,dayOfWeek);}else el.style.opacity="0.3";
-        if(selectedDate===`${year}-${month+1}-${d}`) el.classList.add("selected");
-        daysDiv.appendChild(el);
+      for (let d=1; d<= lastDay.getDate(); d++){
+        const dateObj = new Date(year, month, d);
+        const dow = dateObj.getDay(); // 0 Sun ... 6 Sat
+        const dayEl = document.createElement("div");
+        dayEl.className = "day";
+        dayEl.textContent = d;
+        if (dow === 0) dayEl.style.color = "#ff8080";
+        if (dow === 6) dayEl.style.color = "#7ec8ff";
+
+        const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        if (!isPast) {
+          // pass event as parameter safely
+          dayEl.addEventListener("click", (e) => selectDate(year, month+1, d, dow, e.currentTarget));
+        } else {
+          dayEl.style.opacity = "0.35";
+        }
+
+        daysDiv.appendChild(dayEl);
       }
 
       calendar.appendChild(daysDiv);
     }
 
-    window.nextMonth=()=>{
-      const now=new Date();
-      const sixLater=new Date(now.getFullYear(),now.getMonth()+6);
-      if(currentDate<sixLater){currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();}
+    window.nextMonth = () => {
+      const now = new Date();
+      const sixLater = new Date(now.getFullYear(), now.getMonth()+6, 1);
+      if (currentDate < sixLater) {
+        currentDate.setMonth(currentDate.getMonth()+1);
+        renderCalendar();
+      }
     };
-    window.prevMonth=()=>{
-      const now=new Date();
-      if(currentDate.getFullYear()>now.getFullYear()||currentDate.getMonth()>now.getMonth()){
+    window.prevMonth = () => {
+      const now = new Date();
+      if (currentDate.getFullYear() > now.getFullYear() || currentDate.getMonth() > now.getMonth()){
         currentDate.setMonth(currentDate.getMonth()-1);
         renderCalendar();
       }
     };
 
-    async function selectDate(year,month,day,dayOfWeek){
-      const dayNames=["日","月","火","水","木","金","土"];
-      const dayName=dayNames[dayOfWeek];
-      selectedDate=`${year}-${month}-${day}`;
-      document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected"));
-      event.target.classList.add("selected");
+    // --- select date and render studio/time grid (layout: studios across top, times below each studio) ---
+    async function selectDate(year, month, day, dayOfWeek, clickedEl) {
+      const dayNames = ["日","月","火","水","木","金","土"];
+      const dayName = dayNames[dayOfWeek];
+      selectedDate = `${year}-${month}-${day}`;
 
-      const grid=document.getElementById("studio-grid");
-      grid.innerHTML="";
+      // highlight selected calendar cell
+      document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
+      if (clickedEl) clickedEl.classList.add("selected");
 
-      // 時間軸（上部）
-      const headerRow=document.createElement("div");
-      headerRow.classList.add("time-header");
-      headerRow.innerHTML="<div class='header-cell'></div>"; // 左上の空白
-      for(let hour=7;hour<22;hour++){
-        const cell=document.createElement("div");
-        cell.classList.add("header-cell");
-        cell.textContent=`${hour}:00`;
-        headerRow.appendChild(cell);
+      // build grid where top row = studio names, below each studio row shows 15 time slots horizontally
+      const container = document.getElementById("studio-grid");
+      container.innerHTML = "";
+
+      // header row: empty cell + hours
+      const headerRow = document.createElement("div");
+      headerRow.className = "grid-row header-row";
+      const emptyHeader = document.createElement("div");
+      emptyHeader.className = "grid-cell header-cell empty";
+      headerRow.appendChild(emptyHeader);
+      for (let h=7; h<22; h++) {
+        const c = document.createElement("div");
+        c.className = "grid-cell header-cell";
+        c.textContent = `${h}:00`;
+        headerRow.appendChild(c);
       }
-      grid.appendChild(headerRow);
+      container.appendChild(headerRow);
 
-      // 各スタジオ行
-      for(const [studio,info] of Object.entries(studioInfo)){
-        const row=document.createElement("div");
-        row.classList.add("studio-row");
+      // for each studio, one row: studio label + 15 slot cells
+      for (const studio of Object.keys(studioInfo)) {
+        const row = document.createElement("div");
+        row.className = "grid-row studio-row";
 
-        const label=document.createElement("div");
-        label.classList.add("studio-label");
-        label.textContent=`${studio}`;
-        label.style.backgroundColor=info.color;
+        const label = document.createElement("div");
+        label.className = "grid-cell studio-label";
+        label.textContent = `スタジオ${studio} ¥${studioInfo[studio].price.toLocaleString()}`;
+        label.style.background = studioInfo[studio].color;
         row.appendChild(label);
 
-        for(let hour=7;hour<22;hour++){
-          const slot=document.createElement("div");
-          slot.classList.add("slot");
-          slot.style.backgroundColor=info.color+"40";
-          const slotRef=doc(db,"reservations",`${studio}_${selectedDate}_${hour}`);
-          const docSnap=await getDoc(slotRef);
-
-          if(docSnap.exists()){
-            slot.textContent="✕";
-            slot.classList.add("booked");
-          }else{
-            slot.textContent="○";
-            slot.onclick=()=>toggleSlot(studio,hour,dayName,slot);
+        for (let h=7; h<22; h++) {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell slot";
+          cell.style.background = studioInfo[studio].color + "40";
+          // check Firestore doc
+          try {
+            // create local closure vars to avoid race issues
+            /* eslint-disable no-await-in-loop */
+            const docRef = doc(db, "reservations", `${studio}_${year}-${month}-${day}_${h}`);
+            // note: Firestore getDoc is async; await directly
+            // using await here so UI draws slot state correctly
+            // if many requests slow, could batch later
+            const snapshot = await getDoc(docRef);
+            if (snapshot.exists()) {
+              cell.textContent = "✕";
+              cell.classList.add("booked");
+            } else {
+              cell.textContent = "○";
+              // attach handler with closure values
+              cell.addEventListener("click", () => toggleSlot(studio, h, dayName, cell));
+            }
+          } catch (err) {
+            console.error("Firestore read error:", err);
+            cell.textContent = "-";
+            cell.classList.add("booked");
           }
-          row.appendChild(slot);
+          row.appendChild(cell);
         }
-        grid.appendChild(row);
+
+        container.appendChild(row);
       }
     }
 
-    function toggleSlot(studio,hour,dayName,el){
-      const key=`${selectedDate}_${studio}_${hour}`;
-      const info=studioInfo[studio];
-      const label=`${selectedDate}（${dayName}）${hour}時－${hour+1}時　スタジオ${studio}　${info.price}円`;
-      const existing=selectedSlots.find(s=>s.key===key);
-      if(existing){
-        selectedSlots=selectedSlots.filter(s=>s.key!==key);
+    // toggle selection; we keep selections across different studios/dates
+    function toggleSlot(studio, hour, dayName, el) {
+      const key = `${selectedDate}_${studio}_${hour}`;
+      const idx = selectedSlots.findIndex(s => s.key === key);
+      const price = studioInfo[studio].price;
+      const label = `${selectedDate}（${dayName}）${hour}時－${hour+1}時　スタジオ${studio}　${price}円`;
+
+      if (idx >= 0) {
+        // deselect
+        selectedSlots.splice(idx, 1);
         el.classList.remove("selected-slot");
-        document.querySelectorAll(".selected-item").forEach(i=>{if(i.textContent===label)i.remove();});
-      }else{
-        selectedSlots.push({key,studio,hour,label});
+        // remove from list UI
+        document.querySelectorAll("#selected-info .selected-item").forEach(n => {
+          if (n.textContent === label) n.remove();
+        });
+      } else {
+        // select
+        selectedSlots.push({ key, studio, hour, label });
         el.classList.add("selected-slot");
-        const item=document.createElement("div");
-        item.textContent=label;
-        item.classList.add("selected-item");
+        const item = document.createElement("div");
+        item.className = "selected-item";
+        item.textContent = label;
         document.getElementById("selected-info").appendChild(item);
       }
       updateTotal();
     }
 
     function updateTotal(){
-      const total=selectedSlots.reduce((sum,s)=>sum+studioInfo[s.studio].price,0);
-      document.getElementById("total-price").textContent=`合計金額：${total.toLocaleString()}円（税込）`;
+      const total = selectedSlots.reduce((s, it) => s + studioInfo[it.studio].price, 0);
+      document.getElementById("total-price").textContent = `合計金額：${total.toLocaleString()}円（税込）`;
     }
 
-    window.confirmBooking=async()=>{
-      if(selectedSlots.length===0){alert("予約枠を選択してください。");return;}
-      const user=auth.currentUser;
-      if(!user)return alert("ログインしてください。");
-      if(!confirm("選択した予約を確定しますか？\nキャンセル料規定が適用されます。"))return;
-      for(const s of selectedSlots){
-        await setDoc(doc(db,"reservations",`${s.studio}_${selectedDate}_${s.hour}`),{
-          studio:s.studio,date:selectedDate,hour:s.hour,user:user.email,createdAt:new Date().toISOString(),
+    window.confirmBooking = async () => {
+      if (selectedSlots.length === 0) { alert("予約枠を選択してください。"); return; }
+      const user = auth.currentUser;
+      if (!user) return alert("ログインしてください。");
+      if (!confirm("選択した予約を確定しますか？\nキャンセル料規定が適用されます。")) return;
+      // write each reservation
+      for (const s of selectedSlots) {
+        await setDoc(doc(db, "reservations", `${s.studio}_${s.key.split("_")[0]}_${s.hour}`), {
+          studio: s.studio,
+          date: s.key.split("_")[0],
+          hour: s.hour,
+          user: user.email,
+          createdAt: new Date().toISOString()
         });
       }
       alert("予約が完了しました。");
       window.location.reload();
     };
 
+    window.logout = async () => { await signOut(auth); window.location.href = "register.html"; };
+
+    // initial render
     renderCalendar();
-    window.logout=async()=>{await signOut(auth);window.location.href="register.html";}
   </script>
 
   <style>
-    body{background:#0a1a2f;color:#fff;font-family:"Hiragino Sans","Yu Gothic",sans-serif;text-align:center;margin:0;}
-    header{background:#112244;padding:1rem;}
-    .weekdays,.days{display:grid;grid-template-columns:repeat(7,1fr);}
-    .day{padding:0.5rem;border-radius:6px;background:rgba(255,255,255,0.1);cursor:pointer;}
+    :root{
+      --navy:#0a1a2f;
+      --card: rgba(255,255,255,0.05);
+      --accent:#7ec8ff;
+      --gold: gold;
+    }
+    body{margin:0;background:var(--navy);color:#fff;font-family:"Hiragino Sans","Yu Gothic",sans-serif;}
+    header{background:#112244;padding:1rem;text-align:center;font-weight:700;}
+    .controls{display:flex;justify-content:center;gap:12px;padding:12px;}
+    .btn{background:var(--accent);border:none;padding:8px 14px;border-radius:8px;color:#012;cursor:pointer;}
+    .btn:hover{opacity:0.95;}
+    #calendar{max-width:980px;margin:0 auto;padding:12px;background:var(--card);border-radius:10px;}
+    .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;font-weight:700;}
+    .days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+    .day{background:rgba(255,255,255,0.06);padding:10px;border-radius:6px;cursor:pointer;}
     .day.selected{background:#0078ff;}
-    #studio-grid{margin-top:1rem;max-width:100%;overflow-x:auto;}
-    .time-header,.studio-row{display:grid;grid-template-columns:80px repeat(15,1fr);gap:4px;align-items:center;}
-    .header-cell{font-weight:bold;color:#7ec8ff;}
-    .studio-label{height:50px;border-radius:6px;font-weight:bold;display:flex;align-items:center;justify-content:center;color:#000;}
-    .slot{height:50px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;color:#000;transition:0.2s;}
-    .slot.booked{background:#555;color:#ccc;cursor:not-allowed;}
-    .selected-slot{outline:3px solid gold;animation:glow 1s infinite alternate;}
-    @keyframes glow{from{box-shadow:0 0 10px gold;}to{box-shadow:0 0 25px white;}}
-    .selected-item{background:rgba(255,255,255,0.1);margin:4px auto;padding:0.5rem 1rem;border-radius:8px;max-width:80%;text-align:center;}
-    #total-price{color:#7ec8ff;font-size:1.1rem;margin-top:0.5rem;}
-    footer{margin-top:2rem;color:#ccc;font-size:0.9rem;}
-    .btn{background:#0078ff;color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:10px;margin:1rem;cursor:pointer;}
+    /* studio grid */
+    #studio-grid{max-width:980px;margin:18px auto;overflow:auto;background:var(--card);padding:10px;border-radius:8px;}
+    .grid-row{display:grid;grid-template-columns:200px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;}
+    .header-row{position:sticky;top:0;background:transparent;padding-bottom:8px;}
+    .grid-cell{padding:8px;border-radius:6px;background:rgba(255,255,255,0.03);color:#000;font-weight:600;}
+    .studio-label{display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;}
+    .slot{display:flex;align-items:center;justify-content:center;height:46px;border-radius:6px;cursor:pointer;font-weight:700;}
+    .slot.booked{background:#555;color:#ddd;cursor:not-allowed;}
+    .selected-slot{outline:3px solid var(--gold);box-shadow:0 0 12px var(--gold);transform:translateY(-2px);}
+    /* selected list */
+    #selected-info{max-width:980px;margin:12px auto;text-align:center;}
+    .selected-item{display:inline-block;background:rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;margin:6px;font-weight:700;text-align:center;}
+    #total-price{color:var(--accent);font-weight:800;margin-top:6px;text-align:center;}
+    footer{color:#cfcfcf;text-align:center;padding:18px;margin-top:18px;}
+    @media(max-width:900px){
+      .grid-row{grid-template-columns:140px repeat(15,1fr);}
+      .grid-cell{font-size:12px}
+    }
+    @media(max-width:600px){
+      .grid-row{grid-template-columns:120px repeat(10,1fr);overflow-x:auto;}
+    }
   </style>
 </head>
 
 <body>
   <header>
-    スタジオ予約システム<br>
-    <small>ログイン中：<span id="user-email"></span>　
-    <button onclick="logout()" style="font-size:0.8rem;">ログアウト</button></small>
+    スタジオ予約システム　<span style="font-weight:400;font-size:0.9rem;">ログイン：<span id="user-email"></span></span>
   </header>
 
-  <div id="calendar-controls">
+  <div class="controls">
     <button class="btn" onclick="prevMonth()">◀ 前の月</button>
-    <span id="calendar-title"></span>
+    <div id="calendar-title" style="align-self:center;font-weight:700;"></div>
     <button class="btn" onclick="nextMonth()">次の月 ▶</button>
   </div>
+
   <div id="calendar"></div>
 
-  <h3>スタジオ別予約状況</h3>
+  <h3 style="text-align:center;margin-top:18px;color:var(--accent)">スタジオ別 時間枠（7:00〜22:00）</h3>
   <div id="studio-grid"></div>
 
   <div id="selected-info"></div>
   <div id="total-price"></div>
-  <button class="btn" onclick="confirmBooking()">予約を確定する</button>
+
+  <div style="text-align:center;margin-top:12px;">
+    <button class="btn" onclick="confirmBooking()">予約を確定する</button>
+  </div>
 
   <footer>
     <p>※予約確定時点でキャンセル料の規定が適用されます。</p>
