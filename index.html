@@ -1,323 +1,392 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>スタジオ予約 | 神戸芸術センター</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>スタジオ予約 | 神戸芸術センター</title>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+<script type="module">
+/* Firebase (既存プロジェクト) */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
-      authDomain: "studio-rental-180df.firebaseapp.com",
-      projectId: "studio-rental-180df",
-      storageBucket: "studio-rental-180df.firebasestorage.app",
-      messagingSenderId: "485178815055",
-      appId: "1:485178815055:web:f91792229f8c359cf1303a",
-      measurementId: "G-EF147DP6ZB",
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+  authDomain: "studio-rental-180df.firebaseapp.com",
+  projectId: "studio-rental-180df",
+  storageBucket: "studio-rental-180df.firebasestorage.app",
+  messagingSenderId: "485178815055",
+  appId: "1:485178815055:web:f91792229f8c359cf1303a",
+  measurementId: "G-EF147DP6ZB"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+/* 設定 */
+const studioInfo = {
+  A: { color: "#ffb6c1", price: 1100 },
+  B: { color: "#add8e6", price: 1100 },
+  C: { color: "#98fb98", price: 1980 },
+  EF:{ color: "#87cefa", price: 2310 },
+  R: { color: "#fffacd", price: 2090 }
+};
 
-    const studioInfo = {
-      A: { color: "#ffb6c1", price: 1100 },
-      B: { color: "#add8e6", price: 1100 },
-      C: { color: "#90ee90", price: 1980 },
-      EF:{ color: "#66a3ff", price: 2310 },
-      R: { color: "#fffacd", price: 2090 },
-    };
+const HOURS = Array.from({length:15},(_,i)=>7+i); // 7..21 (表示 7:00-8:00 ... 21:00-22:00)
 
-    let selectedDate = null;
-    let selectedSlots = []; // [{key, studio, hour, label}]
+let selectedDate = null; // "YYYY-M-D"
+let selectedSlots = []; // {key, date, studio, hour, label, price}
 
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        window.location.href = "register.html";
-      } else {
-        const el = document.getElementById("user-email");
-        if (el) el.textContent = user.email;
-      }
-    });
+/* 認証チェック */
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    // 未ログインは登録ページへ
+    window.location.href = "register.html";
+  } else {
+    const el = document.getElementById("user-email");
+    if (el) el.textContent = user.email;
+  }
+});
 
-    // --- calendar ---
-    let currentDate = new Date();
+/* ---------- カレンダー ---------- */
+let currentDate = new Date();
 
-    function renderCalendar() {
-      const calendar = document.getElementById("calendar");
-      calendar.innerHTML = "";
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const today = new Date();
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
 
-      document.getElementById("calendar-title").textContent = `${year}年${month+1}月`;
+function renderCalendar(){
+  const calendar = document.getElementById("calendar");
+  calendar.innerHTML = "";
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth(); // 0-based
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month+1, 0);
+  const today = new Date();
 
-      // weekdays (Mon-first)
-      const weekdays = ["月","火","水","木","金","土","日"];
-      const header = document.createElement("div");
-      header.className = "weekdays";
-      weekdays.forEach(w=>{
-        const d = document.createElement("div");
-        d.textContent = w;
-        if(w==="日") d.style.color="#ff8080";
-        if(w==="土") d.style.color="#7ec8ff";
-        header.appendChild(d);
+  document.getElementById("calendar-title").textContent = `${year}年${month+1}月`;
+
+  // weekdays (Monday first)
+  const weekdays = ["月","火","水","木","金","土","日"];
+  const header = document.createElement("div");
+  header.className = "weekdays";
+  weekdays.forEach(w=>{
+    const wel = document.createElement("div");
+    wel.textContent = w;
+    if (w === "日") wel.style.color = "#ff8080";
+    if (w === "土") wel.style.color = "#7ec8ff";
+    header.appendChild(wel);
+  });
+  calendar.appendChild(header);
+
+  // days grid
+  const days = document.createElement("div");
+  days.className = "days";
+
+  // blanks for month-start (Mon-first)
+  const blankCount = (firstDay.getDay() + 6) % 7;
+  for (let i=0;i<blankCount;i++){
+    const b = document.createElement("div");
+    b.className = "day blank";
+    days.appendChild(b);
+  }
+
+  for (let d=1; d<= lastDay.getDate(); d++){
+    const dateObj = new Date(year, month, d);
+    const dow = dateObj.getDay(); // 0 Sun ... 6 Sat
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "day";
+    dayDiv.textContent = d;
+    if (dow === 0) dayDiv.style.color = "#ff8080";
+    if (dow === 6) dayDiv.style.color = "#7ec8ff";
+
+    // disable past
+    const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (!isPast) {
+      dayDiv.addEventListener("click", (ev)=> {
+        selectDate(year, month+1, d, dow, ev.currentTarget);
       });
-      calendar.appendChild(header);
-
-      const daysDiv = document.createElement("div");
-      daysDiv.className = "days";
-
-      // blank days for month starting Monday
-      let blankDays = (firstDay.getDay() + 6) % 7;
-      for (let i=0;i<blankDays;i++){
-        const b = document.createElement("div");
-        b.className = "day blank";
-        daysDiv.appendChild(b);
-      }
-
-      for (let d=1; d<= lastDay.getDate(); d++){
-        const dateObj = new Date(year, month, d);
-        const dow = dateObj.getDay(); // 0 Sun ... 6 Sat
-        const dayEl = document.createElement("div");
-        dayEl.className = "day";
-        dayEl.textContent = d;
-        if (dow === 0) dayEl.style.color = "#ff8080";
-        if (dow === 6) dayEl.style.color = "#7ec8ff";
-
-        const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        if (!isPast) {
-          // pass event as parameter safely
-          dayEl.addEventListener("click", (e) => selectDate(year, month+1, d, dow, e.currentTarget));
-        } else {
-          dayEl.style.opacity = "0.35";
-        }
-
-        daysDiv.appendChild(dayEl);
-      }
-
-      calendar.appendChild(daysDiv);
+    } else {
+      dayDiv.style.opacity = "0.35";
     }
+    days.appendChild(dayDiv);
+  }
 
-    window.nextMonth = () => {
-      const now = new Date();
-      const sixLater = new Date(now.getFullYear(), now.getMonth()+6, 1);
-      if (currentDate < sixLater) {
-        currentDate.setMonth(currentDate.getMonth()+1);
-        renderCalendar();
-      }
-    };
-    window.prevMonth = () => {
-      const now = new Date();
-      if (currentDate.getFullYear() > now.getFullYear() || currentDate.getMonth() > now.getMonth()){
-        currentDate.setMonth(currentDate.getMonth()-1);
-        renderCalendar();
-      }
-    };
+  calendar.appendChild(days);
+}
 
-    // --- select date and render studio/time grid (layout: studios across top, times below each studio) ---
-    async function selectDate(year, month, day, dayOfWeek, clickedEl) {
-      const dayNames = ["日","月","火","水","木","金","土"];
-      const dayName = dayNames[dayOfWeek];
-      selectedDate = `${year}-${month}-${day}`;
-
-      // highlight selected calendar cell
-      document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
-      if (clickedEl) clickedEl.classList.add("selected");
-
-      // build grid where top row = studio names, below each studio row shows 15 time slots horizontally
-      const container = document.getElementById("studio-grid");
-      container.innerHTML = "";
-
-      // header row: empty cell + hours
-      const headerRow = document.createElement("div");
-      headerRow.className = "grid-row header-row";
-      const emptyHeader = document.createElement("div");
-      emptyHeader.className = "grid-cell header-cell empty";
-      headerRow.appendChild(emptyHeader);
-      for (let h=7; h<22; h++) {
-        const c = document.createElement("div");
-        c.className = "grid-cell header-cell";
-        c.textContent = `${h}:00`;
-        headerRow.appendChild(c);
-      }
-      container.appendChild(headerRow);
-
-      // for each studio, one row: studio label + 15 slot cells
-      for (const studio of Object.keys(studioInfo)) {
-        const row = document.createElement("div");
-        row.className = "grid-row studio-row";
-
-        const label = document.createElement("div");
-        label.className = "grid-cell studio-label";
-        label.textContent = `スタジオ${studio} ¥${studioInfo[studio].price.toLocaleString()}`;
-        label.style.background = studioInfo[studio].color;
-        row.appendChild(label);
-
-        for (let h=7; h<22; h++) {
-          const cell = document.createElement("div");
-          cell.className = "grid-cell slot";
-          cell.style.background = studioInfo[studio].color + "40";
-          // check Firestore doc
-          try {
-            // create local closure vars to avoid race issues
-            /* eslint-disable no-await-in-loop */
-            const docRef = doc(db, "reservations", `${studio}_${year}-${month}-${day}_${h}`);
-            // note: Firestore getDoc is async; await directly
-            // using await here so UI draws slot state correctly
-            // if many requests slow, could batch later
-            const snapshot = await getDoc(docRef);
-            if (snapshot.exists()) {
-              cell.textContent = "✕";
-              cell.classList.add("booked");
-            } else {
-              cell.textContent = "○";
-              // attach handler with closure values
-              cell.addEventListener("click", () => toggleSlot(studio, h, dayName, cell));
-            }
-          } catch (err) {
-            console.error("Firestore read error:", err);
-            cell.textContent = "-";
-            cell.classList.add("booked");
-          }
-          row.appendChild(cell);
-        }
-
-        container.appendChild(row);
-      }
-    }
-
-    // toggle selection; we keep selections across different studios/dates
-    function toggleSlot(studio, hour, dayName, el) {
-      const key = `${selectedDate}_${studio}_${hour}`;
-      const idx = selectedSlots.findIndex(s => s.key === key);
-      const price = studioInfo[studio].price;
-      const label = `${selectedDate}（${dayName}）${hour}時－${hour+1}時　スタジオ${studio}　${price}円`;
-
-      if (idx >= 0) {
-        // deselect
-        selectedSlots.splice(idx, 1);
-        el.classList.remove("selected-slot");
-        // remove from list UI
-        document.querySelectorAll("#selected-info .selected-item").forEach(n => {
-          if (n.textContent === label) n.remove();
-        });
-      } else {
-        // select
-        selectedSlots.push({ key, studio, hour, label });
-        el.classList.add("selected-slot");
-        const item = document.createElement("div");
-        item.className = "selected-item";
-        item.textContent = label;
-        document.getElementById("selected-info").appendChild(item);
-      }
-      updateTotal();
-    }
-
-    function updateTotal(){
-      const total = selectedSlots.reduce((s, it) => s + studioInfo[it.studio].price, 0);
-      document.getElementById("total-price").textContent = `合計金額：${total.toLocaleString()}円（税込）`;
-    }
-
-    window.confirmBooking = async () => {
-      if (selectedSlots.length === 0) { alert("予約枠を選択してください。"); return; }
-      const user = auth.currentUser;
-      if (!user) return alert("ログインしてください。");
-      if (!confirm("選択した予約を確定しますか？\nキャンセル料規定が適用されます。")) return;
-      // write each reservation
-      for (const s of selectedSlots) {
-        await setDoc(doc(db, "reservations", `${s.studio}_${s.key.split("_")[0]}_${s.hour}`), {
-          studio: s.studio,
-          date: s.key.split("_")[0],
-          hour: s.hour,
-          user: user.email,
-          createdAt: new Date().toISOString()
-        });
-      }
-      alert("予約が完了しました。");
-      window.location.reload();
-    };
-
-    window.logout = async () => { await signOut(auth); window.location.href = "register.html"; };
-
-    // initial render
+/* next / prev month (prev blocked if before current) */
+window.nextMonth = () => {
+  const now = new Date();
+  const sixLater = new Date(now.getFullYear(), now.getMonth()+6, 1);
+  if (currentDate < sixLater) {
+    currentDate.setMonth(currentDate.getMonth()+1);
     renderCalendar();
-  </script>
+  }
+};
+window.prevMonth = () => {
+  const now = new Date();
+  if (currentDate.getFullYear() > now.getFullYear() || currentDate.getMonth() > now.getMonth()) {
+    currentDate.setMonth(currentDate.getMonth()-1);
+    renderCalendar();
+  }
+};
 
-  <style>
-    :root{
-      --navy:#0a1a2f;
-      --card: rgba(255,255,255,0.05);
-      --accent:#7ec8ff;
-      --gold: gold;
+/* ---------- 日付選択後：表（時間×スタジオ）を描画 ---------- */
+async function selectDate(year, month, day, dow, clickedEl){
+  // dayName
+  const dayNames = ["日","月","火","水","木","金","土"];
+  const dayName = dayNames[dow];
+
+  selectedDate = `${year}-${month}-${day}`; // e.g. "2025-11-15"
+  // highlight calendar cell
+  document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
+  if (clickedEl) clickedEl.classList.add("selected");
+
+  // build table: left column = time labels, top row = studio names
+  const container = document.getElementById("studio-area");
+  container.innerHTML = "";
+
+  // Header row: empty corner + studios
+  const headerRow = document.createElement("div");
+  headerRow.className = "table-row header-row";
+  const corner = document.createElement("div");
+  corner.className = "table-cell time-cell corner";
+  corner.textContent = "";
+  headerRow.appendChild(corner);
+  for (const s of Object.keys(studioInfo)) {
+    const scell = document.createElement("div");
+    scell.className = "table-cell studio-cell";
+    scell.textContent = `スタジオ${s}\n¥${studioInfo[s].price.toLocaleString()}`;
+    scell.style.background = studioInfo[s].color;
+    headerRow.appendChild(scell);
+  }
+  container.appendChild(headerRow);
+
+  // Rows for each hour
+  for (const h of HOURS) {
+    const row = document.createElement("div");
+    row.className = "table-row";
+
+    // time label cell
+    const timeCell = document.createElement("div");
+    timeCell.className = "table-cell time-cell";
+    const start = pad(h)+":00";
+    const end = pad(h+1)+":00";
+    timeCell.textContent = `${start}〜${end}`;
+    row.appendChild(timeCell);
+
+    // cells per studio
+    for (const s of Object.keys(studioInfo)) {
+      const cell = document.createElement("div");
+      cell.className = "table-cell slot-cell";
+      cell.style.background = studioInfo[s].color + "33"; // translucent
+      cell.dataset.studio = s;
+      cell.dataset.hour = h;
+      cell.dataset.date = selectedDate;
+      // show time inside
+      const label = document.createElement("div");
+      label.className = "slot-label";
+      label.textContent = `${start}〜${end}`;
+      cell.appendChild(label);
+
+      // check Firestore
+      try {
+        const id = `${s}_${selectedDate}_${h}`;
+        const docRef = doc(db, "reservations", id);
+        // await per-cell (simple & reliable). If slow, we can batch later.
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const mark = document.createElement("div");
+          mark.className = "slot-mark booked-mark";
+          mark.textContent = "✕";
+          cell.appendChild(mark);
+          cell.classList.add("booked");
+        } else {
+          const mark = document.createElement("div");
+          mark.className = "slot-mark avail-mark";
+          mark.textContent = "○";
+          cell.appendChild(mark);
+          // click handler
+          cell.addEventListener("click", ()=> toggleSlot(s, selectedDate, h, dayName, cell));
+        }
+      } catch(err) {
+        console.error("Firestore error reading", err);
+        cell.classList.add("booked");
+        const mark = document.createElement("div");
+        mark.className = "slot-mark booked-mark";
+        mark.textContent = "-";
+        cell.appendChild(mark);
+      }
+
+      row.appendChild(cell);
     }
-    body{margin:0;background:var(--navy);color:#fff;font-family:"Hiragino Sans","Yu Gothic",sans-serif;}
-    header{background:#112244;padding:1rem;text-align:center;font-weight:700;}
-    .controls{display:flex;justify-content:center;gap:12px;padding:12px;}
-    .btn{background:var(--accent);border:none;padding:8px 14px;border-radius:8px;color:#012;cursor:pointer;}
-    .btn:hover{opacity:0.95;}
-    #calendar{max-width:980px;margin:0 auto;padding:12px;background:var(--card);border-radius:10px;}
-    .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;font-weight:700;}
-    .days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-    .day{background:rgba(255,255,255,0.06);padding:10px;border-radius:6px;cursor:pointer;}
-    .day.selected{background:#0078ff;}
-    /* studio grid */
-    #studio-grid{max-width:980px;margin:18px auto;overflow:auto;background:var(--card);padding:10px;border-radius:8px;}
-    .grid-row{display:grid;grid-template-columns:200px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;}
-    .header-row{position:sticky;top:0;background:transparent;padding-bottom:8px;}
-    .grid-cell{padding:8px;border-radius:6px;background:rgba(255,255,255,0.03);color:#000;font-weight:600;}
-    .studio-label{display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;}
-    .slot{display:flex;align-items:center;justify-content:center;height:46px;border-radius:6px;cursor:pointer;font-weight:700;}
-    .slot.booked{background:#555;color:#ddd;cursor:not-allowed;}
-    .selected-slot{outline:3px solid var(--gold);box-shadow:0 0 12px var(--gold);transform:translateY(-2px);}
-    /* selected list */
-    #selected-info{max-width:980px;margin:12px auto;text-align:center;}
-    .selected-item{display:inline-block;background:rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;margin:6px;font-weight:700;text-align:center;}
-    #total-price{color:var(--accent);font-weight:800;margin-top:6px;text-align:center;}
-    footer{color:#cfcfcf;text-align:center;padding:18px;margin-top:18px;}
-    @media(max-width:900px){
-      .grid-row{grid-template-columns:140px repeat(15,1fr);}
-      .grid-cell{font-size:12px}
+
+    container.appendChild(row);
+  }
+
+  // keep selected list intact (we don't clear)
+}
+
+/* ---------- 選択の追加/削除 ---------- */
+function toggleSlot(studio, date, hour, dayName, cellEl){
+  const key = `${date}_${studio}_${hour}`;
+  const idx = selectedSlots.findIndex(x => x.key === key);
+  const price = studioInfo[studio].price;
+  const label = `${date}（${dayName}）${hour.toString().padStart(2,'0')}:00〜${(hour+1).toString().padStart(2,'0')}:00　スタジオ${studio}　${price.toLocaleString()}円`;
+
+  if (idx >= 0) {
+    // deselect
+    selectedSlots.splice(idx,1);
+    cellEl.classList.remove("selected");
+    // remove list item
+    document.querySelectorAll("#selected-info .selected-item").forEach(it => {
+      if (it.textContent === label) it.remove();
+    });
+  } else {
+    // select
+    selectedSlots.push({ key, date, studio, hour, label, price });
+    cellEl.classList.add("selected");
+    // add list item (centralized)
+    const item = document.createElement("div");
+    item.className = "selected-item";
+    item.textContent = label;
+    document.getElementById("selected-info").appendChild(item);
+  }
+  updateTotal();
+}
+
+/* ---------- 合計表示 ---------- */
+function updateTotal(){
+  const total = selectedSlots.reduce((s,x)=> s + Number(x.price), 0);
+  document.getElementById("total-price").textContent = `合計金額：${total.toLocaleString()}円（税込）`;
+}
+
+/* ---------- 予約確定 ---------- */
+async function confirmBooking(){
+  if (selectedSlots.length === 0) { alert("予約枠を選択してください。"); return; }
+  const user = auth.currentUser;
+  if (!user) { alert("ログインが必要です。"); return; }
+
+  if (!confirm("選択中の予約をすべて確定しますか？\n「予約を確定する」を押した時点でキャンセル規定が適用されます。")) return;
+
+  // Attempt to write each reservation, but re-check to avoid race conflicts
+  for (const s of selectedSlots) {
+    const id = `${s.studio}_${s.date}_${s.hour}`;
+    const docRef = doc(db, "reservations", id);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      alert(`すでに埋まっている枠があります： ${s.label}\n他の枠は保存されます。`);
+      continue;
     }
-    @media(max-width:600px){
-      .grid-row{grid-template-columns:120px repeat(10,1fr);overflow-x:auto;}
-    }
-  </style>
+    await setDoc(doc(db, "reservations", id), {
+      studio: s.studio,
+      date: s.date,
+      hour: s.hour,
+      user: user.email,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  alert("予約が完了しました。");
+  window.location.reload();
+}
+
+/* ログアウト */
+window.logout = async () => {
+  await signOut(auth);
+  window.location.href = "register.html";
+};
+
+/* 初期レンダリング */
+renderCalendar();
+
+</script>
+
+<style>
+:root{
+  --navy: #0a1a2f;
+  --panel: rgba(255,255,255,0.04);
+  --accent: #7ec8ff;
+  --gold: gold;
+}
+html,body {height:100%; margin:0; background:var(--navy); color:#fff; font-family:"Hiragino Sans","Yu Gothic",sans-serif;}
+header{background:#112244;padding:12px 16px;text-align:center;font-weight:700;}
+.controls{display:flex;justify-content:center;gap:12px;padding:12px;flex-wrap:wrap;}
+.btn{background:var(--accent);color:#012;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700;}
+#calendar{max-width:980px;margin:0 auto;padding:12px;background:var(--panel);border-radius:10px;}
+.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;font-weight:700;}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.day{background:rgba(255,255,255,0.06);padding:10px;border-radius:6px;cursor:pointer;text-align:center;}
+.day.blank{background:transparent;cursor:default;}
+.day.selected{background:#0078ff;box-shadow:0 0 8px rgba(0,120,255,0.5);}
+.table-container{max-width:980px;margin:18px auto;background:var(--panel);padding:10px;border-radius:10px;overflow:auto;}
+.table-row{display:grid;grid-template-columns:160px repeat(5,1fr);gap:8px;align-items:center;margin-bottom:8px;}
+.table-cell{padding:8px;border-radius:6px;background:rgba(255,255,255,0.03);color:#000;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.corner{background:transparent;color:#fff;font-weight:700;}
+.studio-cell{min-width:120px;white-space:pre-line;}
+.time-cell{min-width:120px;background:rgba(255,255,255,0.02);color:#fff;}
+.slot-cell{min-width:120px;height:58px;flex-direction:column;position:relative;cursor:pointer;}
+.slot-cell .slot-label{font-size:13px;color:#fff;margin-bottom:6px;}
+.slot-mark{position:absolute;right:6px;top:6px;font-weight:900;}
+.booked{opacity:0.7;cursor:not-allowed;}
+.slot-cell.selected{outline:3px solid var(--gold);box-shadow:0 0 12px rgba(255,215,0,0.8);transform:translateY(-3px);}
+.selected-item{display:block;background:rgba(255,255,255,0.05);margin:8px auto;padding:8px 12px;border-radius:10px;max-width:90%;text-align:center;color:#fff;font-weight:700;}
+#selected-info{text-align:center;margin-top:12px;}
+#total-price{text-align:center;color:var(--accent);font-weight:800;margin-top:6px;}
+.footer-panel{max-width:980px;margin:20px auto;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;color:#ddd;font-size:0.95rem;line-height:1.6;}
+@media(max-width:900px){
+  .table-row{grid-template-columns:120px repeat(5,1fr);}
+  .slot-cell{min-width:90px;height:54px;}
+}
+@media(max-width:600px){
+  .table-row{grid-template-columns:100px repeat(5,1fr);}
+  .slot-cell{min-width:80px;height:48px;padding:6px;}
+  .slot-cell .slot-label{font-size:11px;}
+}
+</style>
 </head>
 
 <body>
-  <header>
-    スタジオ予約システム　<span style="font-weight:400;font-size:0.9rem;">ログイン：<span id="user-email"></span></span>
-  </header>
+<header>
+  スタジオ予約システム　
+  <span style="font-weight:400;font-size:0.9rem;">ログイン中：<span id="user-email"></span>
+  <button class="btn" onclick="logout()" style="margin-left:12px;font-weight:600;">ログアウト</button></span>
+</header>
 
-  <div class="controls">
-    <button class="btn" onclick="prevMonth()">◀ 前の月</button>
-    <div id="calendar-title" style="align-self:center;font-weight:700;"></div>
-    <button class="btn" onclick="nextMonth()">次の月 ▶</button>
-  </div>
+<div class="controls">
+  <button class="btn" onclick="prevMonth()">◀ 前の月</button>
+  <div id="calendar-title" style="align-self:center;font-weight:700;"></div>
+  <button class="btn" onclick="nextMonth()">次の月 ▶</button>
+</div>
 
-  <div id="calendar"></div>
+<div id="calendar"></div>
 
-  <h3 style="text-align:center;margin-top:18px;color:var(--accent)">スタジオ別 時間枠（7:00〜22:00）</h3>
-  <div id="studio-grid"></div>
+<div class="table-container" id="studio-area" aria-live="polite">
+  <!-- 日付を選ぶとここに「時間×スタジオ表」が出ます -->
+  <p style="text-align:center;color:#cfcfcf;">カレンダーから日付を選択してください（過去日は選べません）。</p>
+</div>
 
-  <div id="selected-info"></div>
-  <div id="total-price"></div>
+<div id="selected-info"></div>
+<div id="total-price"></div>
 
-  <div style="text-align:center;margin-top:12px;">
-    <button class="btn" onclick="confirmBooking()">予約を確定する</button>
-  </div>
+<div style="text-align:center;margin-top:12px;">
+  <button class="btn" onclick="confirmBooking()">予約を確定する</button>
+</div>
 
-  <footer>
-    <p>※予約確定時点でキャンセル料の規定が適用されます。</p>
-    <p>予約受付：毎月1日午前9時〜6ヶ月先の月末まで。</p>
-    <p>電話番号：078-241-7477　住所：神戸市中央区熊内橋通7-1-13</p>
-  </footer>
+<div class="footer-panel" role="contentinfo">
+  <p><strong>キャンセル料（スタジオA/B/C/EF/R共通）</strong></p>
+  <ul>
+    <li>利用日3か月前〜30日前：施設利用料金の50％</li>
+    <li>利用日29日前〜当日：施設利用料金の100％</li>
+    <li>天災など不可抗力の場合は全額返還</li>
+    <li>返金時は銀行振込手数料＋払戻手数料1,000円を差し引きます</li>
+    <li>利用日の変更はキャンセル扱いになります</li>
+  </ul>
+
+  <p><strong>支払い・連絡先</strong></p>
+  <p>支払い方法：銀行振込または現地現金支払いのみ</p>
+  <p>お問い合わせ：神戸芸術センター総合受付　電話：078-241-7477（受付 9:00–12:00 / 13:00–18:00）</p>
+  <p>住所：神戸市中央区熊内橋通7-1-13</p>
+</div>
 </body>
 </html>
