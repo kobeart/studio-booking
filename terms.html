@@ -42,18 +42,20 @@
       text-align: center;
       margin-top: 2rem;
     }
-    .agree-btn {
-      background-color: #0078ff;
-      color: #fff;
-      padding: 0.8rem 2rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .agree-btn:hover {
-      background-color: #3399ff;
-    }
+.agree-btn {
+  display: inline-block;
+  text-decoration: none;
+  background-color: #0078ff;
+  color: #fff;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.agree-btn:hover {
+  background-color: #3399ff;
+}
     footer {
       text-align: center;
       color: #aaa;
@@ -118,7 +120,7 @@
     <p>料金・規約は予告なく変更する場合があります。不明点は担当者までお問い合わせください。</p>
 
     <div class="btn-area">
-      <button class="agree-btn" onclick="location.href='register.html'">同意して次へ</button>
+     <a href="register.html" class="agree-btn">同意して次へ</a>
     </div>
   </main>
   <footer>
