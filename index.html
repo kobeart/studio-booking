@@ -27,12 +27,12 @@
     let selectedDate = null;
     let selectedSlots = [];
 
-    const studioColors = {
-      A: "#ffb6c1",
-      B: "#add8e6",
-      C: "#90ee90",
-      EF: "#66a3ff",
-      R: "#fffacd",
+    const studioInfo = {
+      A: { color: "#ffb6c1", price: 1100 },
+      B: { color: "#add8e6", price: 1100 },
+      C: { color: "#90ee90", price: 1980 },
+      EF: { color: "#66a3ff", price: 2310 },
+      R: { color: "#fffacd", price: 2090 },
     };
 
     onAuthStateChanged(auth, (user) => {
@@ -50,9 +50,9 @@
       document.querySelectorAll(".studio-btn").forEach(btn => btn.classList.remove("active"));
       const activeBtn = document.getElementById(`studio-${studio}`);
       activeBtn.classList.add("active");
-      activeBtn.scrollIntoView({ behavior: "smooth", block: "center" });
       renderCalendar();
       document.getElementById("time-slots").innerHTML = "";
+      document.getElementById("selected-info").innerHTML = "";
     };
 
     let currentDate = new Date();
@@ -64,17 +64,18 @@
       const month = currentDate.getMonth();
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
+      const today = new Date();
 
       document.getElementById("calendar-title").textContent = `${year}年${month + 1}月`;
 
-      const weekdays = ["日","月","火","水","木","金","土"];
+      const weekdays = ["月","火","水","木","金","土","日"];
       const headerRow = document.createElement("div");
       headerRow.classList.add("weekdays");
       weekdays.forEach((w, i) => {
         const wd = document.createElement("div");
         wd.textContent = w;
-        if (i === 0) wd.style.color = "#ff7b7b";
-        if (i === 6) wd.style.color = "#7ec8ff";
+        if (w === "日") wd.style.color = "#ff7b7b";
+        if (w === "土") wd.style.color = "#7ec8ff";
         headerRow.appendChild(wd);
       });
       calendar.appendChild(headerRow);
@@ -82,17 +83,30 @@
       const daysDiv = document.createElement("div");
       daysDiv.classList.add("days");
 
-      for (let i = 0; i < firstDay.getDay(); i++) {
+      // 月曜始まり調整
+      let blankDays = (firstDay.getDay() + 6) % 7;
+      for (let i = 0; i < blankDays; i++) {
         const blank = document.createElement("div");
         blank.classList.add("day", "blank");
         daysDiv.appendChild(blank);
       }
 
       for (let d = 1; d <= lastDay.getDate(); d++) {
+        const dateObj = new Date(year, month, d);
+        const dayOfWeek = dateObj.getDay();
         const dayEl = document.createElement("div");
         dayEl.classList.add("day");
         dayEl.textContent = d;
-        dayEl.onclick = () => selectDate(year, month + 1, d);
+        if (dayOfWeek === 0) dayEl.style.color = "#ff7b7b";
+        if (dayOfWeek === 6) dayEl.style.color = "#7ec8ff";
+
+        const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        if (!isPast) {
+          dayEl.onclick = () => selectDate(year, month + 1, d, dayOfWeek);
+        } else {
+          dayEl.style.opacity = "0.3";
+        }
+
         if (selectedDate === `${year}-${month + 1}-${d}`) {
           dayEl.classList.add("selected");
         }
@@ -103,33 +117,43 @@
     }
 
     window.nextMonth = () => {
-      currentDate.setMonth(currentDate.getMonth() + 1);
-      renderCalendar();
+      const now = new Date();
+      const sixMonthsLater = new Date(now.getFullYear(), now.getMonth() + 6, 1);
+      if (currentDate < sixMonthsLater) {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      }
     };
 
     window.prevMonth = () => {
-      currentDate.setMonth(currentDate.getMonth() - 1);
-      renderCalendar();
+      const now = new Date();
+      if (currentDate.getFullYear() > now.getFullYear() ||
+          currentDate.getMonth() > now.getMonth()) {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      }
     };
 
-    async function selectDate(year, month, day) {
+    async function selectDate(year, month, day, dayOfWeek) {
       if (!selectedStudio) {
         alert("スタジオを選択してください。");
         return;
       }
 
+      const dayNames = ["日","月","火","水","木","金","土"];
+      const dayName = dayNames[dayOfWeek];
       selectedDate = `${year}-${month}-${day}`;
       document.querySelectorAll(".day").forEach((d) => d.classList.remove("selected"));
       event.target.classList.add("selected");
 
       const timeSlotsDiv = document.getElementById("time-slots");
-      timeSlotsDiv.innerHTML = `<h3>${selectedDate} の予約状況 (${selectedStudio})</h3><div class='slots-grid'></div>`;
+      timeSlotsDiv.innerHTML = `<h3>スタジオ${selectedStudio}　${selectedDate}（${dayName}）の予約状況</h3><div class='slots-grid'></div>`;
       const grid = timeSlotsDiv.querySelector(".slots-grid");
 
       for (let hour = 7; hour < 22; hour++) {
         const slotEl = document.createElement("div");
         slotEl.classList.add("slot");
-        slotEl.style.backgroundColor = studioColors[selectedStudio];
+        slotEl.style.backgroundColor = studioInfo[selectedStudio].color;
         const time = `${hour}:00 - ${hour + 1}:00`;
         const slotId = `${hour}`;
         const docRef = doc(db, "reservations", `${selectedStudio}_${selectedDate}_${slotId}`);
@@ -140,20 +164,47 @@
           slotEl.classList.add("booked");
         } else {
           slotEl.textContent = `${time} ○`;
-          slotEl.onclick = () => toggleSlot(slotId, time, slotEl);
+          slotEl.onclick = () => toggleSlot(slotId, hour, time, slotEl, dayName);
         }
         grid.appendChild(slotEl);
       }
+
+      document.getElementById("selected-info").innerHTML = "";
     }
 
-    function toggleSlot(slotId, time, el) {
+    function toggleSlot(slotId, hour, time, el, dayName) {
+      const price = studioInfo[selectedStudio].price;
+      const dateLabel = `${selectedDate}（${dayName}）${hour}時－${hour + 1}時　スタジオ${selectedStudio}　${price}円`;
+
       if (selectedSlots.includes(slotId)) {
         selectedSlots = selectedSlots.filter((s) => s !== slotId);
         el.classList.remove("selected-slot");
+        removeSelectedInfo(dateLabel);
       } else {
         selectedSlots.push(slotId);
         el.classList.add("selected-slot");
+        addSelectedInfo(dateLabel);
       }
+      updateTotal();
+    }
+
+    function addSelectedInfo(text) {
+      const infoDiv = document.getElementById("selected-info");
+      const item = document.createElement("div");
+      item.textContent = text;
+      item.classList.add("selected-item");
+      infoDiv.appendChild(item);
+    }
+
+    function removeSelectedInfo(text) {
+      document.querySelectorAll(".selected-item").forEach((el) => {
+        if (el.textContent === text) el.remove();
+      });
+    }
+
+    function updateTotal() {
+      const total = selectedSlots.length * studioInfo[selectedStudio].price;
+      document.getElementById("total-price").textContent = `合計金額：${total.toLocaleString()}円（税込）`;
     }
 
     window.confirmBooking = async () => {
@@ -233,7 +284,7 @@
     }
     #calendar {
       margin: 1rem auto;
-      max-width: 600px;
+      max-width: 700px;
       background: rgba(255,255,255,0.05);
       padding: 1rem;
       border-radius: 10px;
@@ -260,9 +311,12 @@
     }
     .slots-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
       margin-top: 1rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .slot {
       border-radius: 6px;
@@ -278,6 +332,17 @@
     }
     .selected-slot {
       outline: 3px solid #fff;
+    }
+    #selected-info {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    #total-price {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #7ec8ff;
+      margin-top: 0.5rem;
     }
     footer {
       font-size: 0.9rem;
@@ -321,6 +386,8 @@
 
   <div id="calendar"></div>
   <div id="time-slots"></div>
+  <div id="selected-info"></div>
+  <div id="total-price"></div>
 
   <button class="btn" onclick="confirmBooking()">予約を確定する</button>
 
