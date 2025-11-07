@@ -89,4 +89,128 @@
     <div class="calendar">
       <label>利用日を選択：</label>
       <input type="date" id="datePicker" min="" />
-      <p id="notice" style="color:#888;font-size:0.9rem;">※劇場同時申込の
+      <p id="notice" style="color:#888;font-size:0.9rem;">※劇場同時申込の場合は2年先まで予約可能です</p>
+      <div id="timeSlots" class="time-grid"></div>
+    </div>
+
+    <form id="reservationForm" style="display:none;">
+      <h3>利用者情報の入力</h3>
+      <label>氏名</label><input type="text" id="name" required>
+      <label>団体名（任意）</label><input type="text" id="group">
+      <label>住所</label><input type="text" id="address" required>
+      <label>電話番号</label><input type="tel" id="phone" required>
+      <label>メールアドレス</label><input type="email" id="email" required>
+      <label>支払方法</label>
+      <select id="payment" required>
+        <option value="">選択してください</option>
+        <option value="bank">銀行振込</option>
+        <option value="cash">現地現金払い</option>
+      </select>
+      <button type="submit" class="submit-btn">予約を確定する</button>
+    </form>
+    <p id="message"></p>
+  </main>
+  <footer>
+    <p>利用規約に同意のうえご利用ください。</p>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    // あなたのFirebase設定を使用
+    const firebaseConfig = {
+      apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+      authDomain: "studio-rental-180df.firebaseapp.com",
+      projectId: "studio-rental-180df",
+      storageBucket: "studio-rental-180df.firebasestorage.app",
+      messagingSenderId: "485178815055",
+      appId: "1:485178815055:web:f91792229f8c359cf1303a",
+      measurementId: "G-EF147DP6ZB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const datePicker = document.getElementById('datePicker');
+    const timeSlots = document.getElementById('timeSlots');
+    const form = document.getElementById('reservationForm');
+    const message = document.getElementById('message');
+
+    // 予約可能期間制御（今日～6ヶ月後の月末）
+    const today = new Date();
+    const minDate = today.toISOString().split("T")[0];
+    const sixMonthsLater = new Date(today.getFullYear(), today.getMonth() + 6 + 1, 0);
+    const maxDate = sixMonthsLater.toISOString().split("T")[0];
+    datePicker.min = minDate;
+    datePicker.max = maxDate;
+
+    datePicker.addEventListener("change", loadSlots);
+
+    async function loadSlots() {
+      const studio = document.getElementById('studioSelect').value;
+      const date = datePicker.value;
+      if (!date) return;
+
+      timeSlots.innerHTML = "<p>読み込み中...</p>";
+      const hours = [];
+      for (let h = 7; h < 22; h++) {
+        hours.push(h);
+      }
+
+      const q = query(collection(db, "reservations"), where("studio", "==", studio), where("date", "==", date));
+      const snap = await getDocs(q);
+      const booked = snap.docs.map(d => d.data().hour);
+
+      timeSlots.innerHTML = "";
+      hours.forEach(h => {
+        const btn = document.createElement("button");
+        btn.textContent = `${h}:00 - ${h+1}:00`;
+        btn.dataset.hour = h;
+        if (booked.includes(h)) {
+          btn.className = "booked";
+          btn.disabled = true;
+          btn.textContent += " ✕";
+        } else {
+          btn.className = "available";
+          btn.textContent += " ○";
+          btn.addEventListener("click", () => btn.classList.toggle("selected"));
+        }
+        timeSlots.appendChild(btn);
+      });
+
+      form.style.display = "block";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const selected = [...document.querySelectorAll(".selected")];
+      if (selected.length === 0) {
+        alert("予約時間を選択してください。");
+        return;
+      }
+      const data = {
+        name: document.getElementById('name').value,
+        group: document.getElementById('group').value,
+        address: document.getElementById('address').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        payment: document.getElementById('payment').value,
+        studio: document.getElementById('studioSelect').value,
+        date: datePicker.value,
+        hours: selected.map(b => Number(b.dataset.hour)),
+        timestamp: new Date()
+      };
+
+      for (const h of data.hours) {
+        await addDoc(collection(db, "reservations"), { ...data, hour: h });
+      }
+
+      message.textContent = "予約が完了しました。ありがとうございます。";
+      form.reset();
+      timeSlots.innerHTML = "";
+    });
+  </script>
+</body>
+</html>
