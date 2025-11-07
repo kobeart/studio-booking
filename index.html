@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>スタジオ予約 | 神戸芸術センター</title>
   <script type="module">
-    // --- Firebase初期化 ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -24,7 +23,6 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // --- グローバル変数 ---
     let selectedStudio = null;
     let selectedDate = null;
     let selectedSlots = [];
@@ -37,7 +35,6 @@
       R: "#fffacd",
     };
 
-    // --- 認証チェック ---
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         alert("ログインしてください。");
@@ -47,17 +44,17 @@
       }
     });
 
-    // --- スタジオ選択 ---
     window.selectStudio = (studio) => {
       selectedStudio = studio;
       selectedSlots = [];
       document.querySelectorAll(".studio-btn").forEach(btn => btn.classList.remove("active"));
-      document.getElementById(`studio-${studio}`).classList.add("active");
+      const activeBtn = document.getElementById(`studio-${studio}`);
+      activeBtn.classList.add("active");
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "center" });
       renderCalendar();
       document.getElementById("time-slots").innerHTML = "";
     };
 
-    // --- カレンダー描画 ---
     let currentDate = new Date();
 
     function renderCalendar() {
@@ -65,12 +62,22 @@
       calendar.innerHTML = "";
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
 
-      const title = document.getElementById("calendar-title");
-      title.textContent = `${year}年${month + 1}月`;
+      document.getElementById("calendar-title").textContent = `${year}年${month + 1}月`;
+
+      const weekdays = ["日","月","火","水","木","金","土"];
+      const headerRow = document.createElement("div");
+      headerRow.classList.add("weekdays");
+      weekdays.forEach((w, i) => {
+        const wd = document.createElement("div");
+        wd.textContent = w;
+        if (i === 0) wd.style.color = "#ff7b7b";
+        if (i === 6) wd.style.color = "#7ec8ff";
+        headerRow.appendChild(wd);
+      });
+      calendar.appendChild(headerRow);
 
       const daysDiv = document.createElement("div");
       daysDiv.classList.add("days");
@@ -105,7 +112,6 @@
       renderCalendar();
     };
 
-    // --- 日付選択 ---
     async function selectDate(year, month, day) {
       if (!selectedStudio) {
         alert("スタジオを選択してください。");
@@ -117,7 +123,8 @@
       event.target.classList.add("selected");
 
       const timeSlotsDiv = document.getElementById("time-slots");
-      timeSlotsDiv.innerHTML = `<h3>${selectedDate} の予約状況 (${selectedStudio})</h3>`;
+      timeSlotsDiv.innerHTML = `<h3>${selectedDate} の予約状況 (${selectedStudio})</h3><div class='slots-grid'></div>`;
+      const grid = timeSlotsDiv.querySelector(".slots-grid");
 
       for (let hour = 7; hour < 22; hour++) {
         const slotEl = document.createElement("div");
@@ -125,7 +132,6 @@
         slotEl.style.backgroundColor = studioColors[selectedStudio];
         const time = `${hour}:00 - ${hour + 1}:00`;
         const slotId = `${hour}`;
-
         const docRef = doc(db, "reservations", `${selectedStudio}_${selectedDate}_${slotId}`);
         const docSnap = await getDoc(docRef);
 
@@ -136,22 +142,20 @@
           slotEl.textContent = `${time} ○`;
           slotEl.onclick = () => toggleSlot(slotId, time, slotEl);
         }
-
-        timeSlotsDiv.appendChild(slotEl);
+        grid.appendChild(slotEl);
       }
     }
 
     function toggleSlot(slotId, time, el) {
       if (selectedSlots.includes(slotId)) {
         selectedSlots = selectedSlots.filter((s) => s !== slotId);
-        el.style.opacity = "1";
+        el.classList.remove("selected-slot");
       } else {
         selectedSlots.push(slotId);
-        el.style.opacity = "0.5";
+        el.classList.add("selected-slot");
       }
     }
 
-    // --- 予約確定 ---
     window.confirmBooking = async () => {
       if (!selectedStudio || !selectedDate || selectedSlots.length === 0) {
         alert("スタジオ・日付・時間を選択してください。");
@@ -178,7 +182,6 @@
       window.location.reload();
     };
 
-    // --- 初期表示 ---
     renderCalendar();
 
     window.logout = async () => {
@@ -216,9 +219,17 @@
       cursor: pointer;
       font-weight: bold;
       color: #000;
+      transition: transform 0.2s;
     }
     .studio-btn.active {
+      color: #fff;
+      animation: pulse 1.5s infinite;
+      transform: scale(1.05);
       border: 3px solid #fff;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 10px #fff; }
+      50% { box-shadow: 0 0 20px #7ec8ff; }
     }
     #calendar {
       margin: 1rem auto;
@@ -226,6 +237,12 @@
       background: rgba(255,255,255,0.05);
       padding: 1rem;
       border-radius: 10px;
+    }
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      font-weight: bold;
+      margin-bottom: 0.3rem;
     }
     .days {
       display: grid;
@@ -241,18 +258,26 @@
     .day.selected {
       background: #0078ff;
     }
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 6px;
+      margin-top: 1rem;
+    }
     .slot {
-      margin: 0.3rem auto;
-      padding: 0.5rem;
       border-radius: 6px;
-      width: 60%;
-      cursor: pointer;
+      padding: 0.5rem;
       color: #000;
       font-weight: bold;
+      cursor: pointer;
     }
-    .booked {
-      background: #999 !important;
+    .slot.booked {
+      background: #777 !important;
+      color: #eee;
       cursor: not-allowed;
+    }
+    .selected-slot {
+      outline: 3px solid #fff;
     }
     footer {
       font-size: 0.9rem;
