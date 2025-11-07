@@ -1,549 +1,92 @@
-<!-- Save as index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>レンタルスタジオ 予約システム（プロトタイプ）</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スタジオ予約システム</title>
   <style>
-    /* small custom */
-    .slot { cursor:pointer; user-select:none; }
-    .slot.disabled { cursor:not-allowed; opacity:0.5; }
-    .slot.selected { background:#059669; color:white; }
-    .slot.free { background:#ecfccb; } /* light green */
-    .slot.busy { background:#fee2e2; } /* light red */
-    .calendar-day { cursor:pointer; padding:6px; border-radius:6px; text-align:center; }
-    .calendar-day.today { border:1px solid #60a5fa; }
-    .calendar-day.selected-date { background:#bfdbfe; }
-    pre { white-space: pre-wrap; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      background: #f9fafb;
+      color: #333;
+    }
+    header {
+      background: #2563eb;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      max-width: 800px;
+      margin: 1rem auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .calendar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 1rem 0;
+    }
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 1rem;
+    }
+    button {
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+    .available { background: #10b981; color: white; }
+    .booked { background: #ef4444; color: white; cursor: not-allowed; }
+    .selected { background: #3b82f6; color: white; }
+    form {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    label { font-weight: bold; }
+    input, select {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .submit-btn {
+      background: #2563eb;
+      color: white;
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #555;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="max-w-5xl mx-auto p-4">
+<body>
+  <header>
+    <h1>スタジオレンタル予約システム</h1>
+  </header>
+  <main>
+    <p>以下のスタジオを選択して予約を進めてください。</p>
+    <select id="studioSelect">
+      <option value="A">スタジオA</option>
+      <option value="B">スタジオB</option>
+      <option value="C">スタジオC</option>
+      <option value="EF">スタジオEF（E+F）</option>
+      <option value="R">スタジオR</option>
+    </select>
 
-    <header class="bg-white shadow rounded p-4 mb-4">
-      <h1 class="text-2xl font-bold text-center">レンタルスタジオ 予約システム（プロトタイプ）</h1>
-      <p class="text-sm text-gray-600 text-center mt-1">※本システムは即時利用できるデモです。予約は localStorage に保存されます。</p>
-    </header>
-
-    <main class="grid md:grid-cols-3 gap-4">
-
-      <!-- 左：規約表示＆同意 -->
-      <section class="md:col-span-1 bg-white p-4 rounded shadow">
-        <h2 class="font-semibold mb-2">利用規約（スタジオ該当部分）</h2>
-        <div class="text-xs text-gray-700 max-h-64 overflow-auto mb-3">
-          <!-- 以下は添付PDF（スタジオA/B/C/EF/Rに関する抜粋）を画面に表示しています。 -->
-          <!-- 出典：添付の「神戸芸術センター 利用規約」より（スタジオA/B/C/EF/Rに該当する箇所）。 -->
-<pre>
-〔会議場・スタジオA・B・C・EF・R〕
-利用日の6ヶ月前の月1日より利用日を含む15日前まで。
-他の施設と併せてご契約の場合は早期受付可能。（応相談）
-
-〔受付方法〕
-※弊社では仮予約の受付は一切行わず、利用申請書の受領を持ってのみご予約の受付をさせていただきます。
-申請書をご提出されずに弊社施設を利用することはできません。
-申請書にご記載頂いた日時が他の団体様と重複した場合、申し込み受付期間内に弊社に利用申請書が到着した日時が早いものを優先させていただきます。
-毎月1日の申込受付開始時間は午前9時が基準となります。
-
-〔お支払いについて〕
-受付完了後、ホール利用代金の請求書をお送り致します。指定期日（受付完了から2週間以内）までに当ホール指定口座へお振込みください。
-その他、付帯設備使用料・技術料等はご利用前に郵送する請求書に基づき、指定期日（利用日の1ヶ月前）までに当ホール指定口座へお振込みください。
-公演当日に発生した付帯設備料金等については、原則、当日ご利用前に現地にて現金精算をお願いいたします。
-振込手数料は利用者負担。
-
-〔キャンセル料（会議場・スタジオA・B・C・EF・R）〕
-利用日3ヶ月前～30日前まで　　　　　　 施設利用料金の50％
-利用日29日前～当日　　　　　　　　　　 施設利用料金の100％
-
-（その他）
-・利用料金は原則返還しない。
-・準備・後片付け等による入室から退室までの時間を含みます。
-・利用変更は原則できず、変更は取消扱いとなる場合があります。
-・利用上の注意（飲食制限、土足禁止（スタジオC以外）等）は遵守してください。
-</pre>
-        </div>
-
-        <label class="flex items-start gap-2">
-          <input type="checkbox" id="agreeCheckbox" class="mt-1">
-          <div class="text-sm">上記内容に同意します（同意しないと予約へ進めません）</div>
-        </label>
-        <button id="toBookingBtn" class="mt-3 w-full bg-blue-600 text-white py-2 rounded">同意して予約へ進む</button>
-
-        <div class="mt-4 text-xs text-gray-500">
-          <p>※劇場と併せて申し込みをする場合は例外的に2年先まで予約可能ですが、劇場予約そのものは本システムでは受付しません（案内のみ）。</p>
-        </div>
-      </section>
-
-      <!-- 中央：カレンダー -->
-      <section class="md:col-span-1 bg-white p-4 rounded shadow">
-        <h2 class="font-semibold mb-2">利用日カレンダー</h2>
-        <div class="flex items-center justify-between mb-2">
-          <button id="prevMonth" class="px-2 py-1 bg-gray-200 rounded">‹</button>
-          <div id="monthLabel" class="font-medium"></div>
-          <button id="nextMonth" class="px-2 py-1 bg-gray-200 rounded">›</button>
-        </div>
-        <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-sm"></div>
-
-        <div class="mt-3 text-xs text-gray-500">
-          <p>日付をクリックすると右側に時間枠の空き状況が表示されます。</p>
-        </div>
-      </section>
-
-      <!-- 右：時間枠＆選択／申し込み -->
-      <section class="md:col-span-1 bg-white p-4 rounded shadow">
-        <h2 class="font-semibold mb-2">時間枠（7:00〜22:00）</h2>
-        <div id="selectedDateLabel" class="text-sm text-gray-700 mb-2">日付を選択してください</div>
-
-        <div id="slots" class="grid grid-cols-3 gap-2 mb-3"></div>
-
-        <div class="border-t pt-3">
-          <h3 class="font-medium mb-1">選択中の枠</h3>
-          <ul id="selectedList" class="text-sm text-gray-700 mb-3"></ul>
-
-          <button id="toFormBtn" class="w-full bg-green-600 text-white py-2 rounded mb-2" disabled>申込へ進む</button>
-          <button id="clearSelectionBtn" class="w-full bg-gray-200 text-gray-800 py-2 rounded">選択をクリア</button>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- 申込フォーム（モーダル風セクション） -->
-    <section id="formSection" class="hidden mt-6 bg-white p-4 rounded shadow max-w-3xl mx-auto">
-      <h2 class="text-lg font-semibold mb-3">予約申込フォーム</h2>
-      <p class="text-sm text-gray-600 mb-3">選択した枠を確認して、以下の情報を入力してください。</p>
-
-      <div id="confirmSlots" class="mb-3 text-sm text-gray-800"></div>
-
-      <div class="grid grid-cols-1 gap-3">
-        <label class="block text-sm">利用者（個人名） <span class="text-red-600">*</span>
-          <input id="inputName" class="mt-1 w-full border rounded p-2" type="text" required>
-        </label>
-
-        <label class="block text-sm">団体名（任意）
-          <input id="inputOrg" class="mt-1 w-full border rounded p-2" type="text">
-        </label>
-
-        <label class="block text-sm">住所 <span class="text-red-600">*</span>
-          <input id="inputAddress" class="mt-1 w-full border rounded p-2" type="text" required>
-        </label>
-
-        <label class="block text-sm">電話番号 <span class="text-red-600">*</span>
-          <input id="inputPhone" class="mt-1 w-full border rounded p-2" type="tel" required>
-        </label>
-
-        <label class="block text-sm">メールアドレス <span class="text-red-600">*</span>
-          <input id="inputEmail" class="mt-1 w-full border rounded p-2" type="email" required>
-        </label>
-
-        <label class="block text-sm">支払い方法 <span class="text-red-600">*</span>
-          <select id="inputPayment" class="mt-1 w-full border rounded p-2">
-            <option value="">選択してください</option>
-            <option value="bank">銀行振込</option>
-            <option value="cash">現地現金精算</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="flex gap-2 mt-4">
-        <button id="submitBookingBtn" class="flex-1 bg-blue-600 text-white py-2 rounded">申し込み決定（保存）</button>
-        <button id="cancelFormBtn" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded">キャンセル</button>
-      </div>
-    </section>
-
-    <!-- 完了 -->
-    <section id="doneSection" class="hidden mt-6 bg-white p-4 rounded shadow text-center">
-      <h2 class="text-lg font-semibold text-green-700">申し込み完了しました</h2>
-      <p class="mt-2 text-sm text-gray-700">予約が保存されました。管理側の確認後、受付処理を行ってください（このプロトタイプでは localStorage に保存されます）。</p>
-      <div class="mt-4 flex gap-2 justify-center">
-        <button id="backToTopBtn" class="bg-indigo-600 text-white py-2 px-4 rounded">トップへ戻る</button>
-        <button id="viewReservationsBtn" class="bg-gray-200 py-2 px-4 rounded">予約一覧を見る</button>
-      </div>
-    </section>
-
-    <!-- 予約一覧（簡易） -->
-    <section id="listSection" class="hidden mt-6 bg-white p-4 rounded shadow">
-      <div class="flex justify-between items-center">
-        <h2 class="font-semibold">保存済み予約（簡易一覧）</h2>
-        <div class="flex gap-2">
-          <button id="exportCsv" class="bg-yellow-500 text-white py-1 px-3 rounded">CSV出力</button>
-          <button id="closeList" class="bg-gray-200 py-1 px-3 rounded">閉じる</button>
-        </div>
-      </div>
-      <div id="listContainer" class="mt-3 space-y-2 text-sm"></div>
-    </section>
-
-    <footer class="text-center text-xs text-gray-500 mt-6">
-      ※本プロトタイプは動作確認用です。実運用ではサーバ側保存・管理者認証・メール送信等を推奨します。
-    </footer>
-  </div>
-
-<script>
-/* ==========================
-   Data & Storage helpers
-   ========================== */
-const STORAGE_KEY = 'studio_reservations_v1';
-
-/** reservation item format:
-{
-  id: <bookingId>,
-  studio: 'A'|'B'|...,
-  date: 'YYYY-MM-DD',
-  start: '07:00', end: '08:00',
-  person: { name, org, address, phone, email },
-  payment: 'bank'|'cash',
-  savedAt: ISOString
-}
-*/
-
-// load/save
-function loadReservations(){
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch(e) { return []; }
-}
-function saveReservations(arr){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-}
-
-/* ==========================
-   Calendar rendering
-   ========================== */
-let viewDate = new Date(); // current month view
-const calendarGrid = document.getElementById('calendarGrid');
-const monthLabel = document.getElementById('monthLabel');
-const prevMonthBtn = document.getElementById('prevMonth');
-const nextMonthBtn = document.getElementById('nextMonth');
-
-function firstDayOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
-function lastDayOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
-
-function formatYMD(d){
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-
-function renderCalendar(){
-  calendarGrid.innerHTML = '';
-  const first = firstDayOfMonth(viewDate);
-  const last = lastDayOfMonth(viewDate);
-  const startWeekday = first.getDay(); // 0 Sun .. 6 Sat
-  const total = last.getDate();
-  monthLabel.textContent = `${viewDate.getFullYear()}年 ${viewDate.getMonth()+1}月`;
-  // week headers
-  const weekNames = ['日','月','火','水','木','金','土'];
-  weekNames.forEach(w => {
-    const el = document.createElement('div');
-    el.className = 'text-center font-medium text-xs text-gray-500';
-    el.textContent = w;
-    calendarGrid.appendChild(el);
-  });
-  // empty cells before first day
-  for(let i=0;i<startWeekday;i++){
-    const blank = document.createElement('div');
-    calendarGrid.appendChild(blank);
-  }
-  // days
-  for(let day=1; day<=total; day++){
-    const dateObj = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    const ymd = formatYMD(dateObj);
-    const cell = document.createElement('div');
-    cell.className = 'calendar-day';
-    if (formatYMD(new Date()) === ymd) cell.classList.add('today');
-    cell.textContent = day;
-    cell.addEventListener('click', () => selectDate(ymd, dateObj));
-    calendarGrid.appendChild(cell);
-  }
-}
-
-prevMonthBtn.addEventListener('click', () => {
-  viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
-  renderCalendar();
-});
-nextMonthBtn.addEventListener('click', () => {
-  viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
-  renderCalendar();
-});
-
-/* ==========================
-   Slots handling
-   ========================== */
-const slotsContainer = document.getElementById('slots');
-const selectedDateLabel = document.getElementById('selectedDateLabel');
-const selectedListEl = document.getElementById('selectedList');
-const toFormBtn = document.getElementById('toFormBtn');
-const clearSelectionBtn = document.getElementById('clearSelectionBtn');
-
-let currentSelectedDate = null; // 'YYYY-MM-DD'
-let selectedSlots = []; // array of {studio, date, start, end}
-
-function getReservationsFor(studio, date){
-  const all = loadReservations();
-  return all.filter(r => r.studio === studio && r.date === date);
-}
-
-function isSlotBooked(studio, date, start){
-  const res = getReservationsFor(studio,date);
-  return res.some(r => r.start === start);
-}
-
-function renderSlotsFor(dateStr){
-  const studio = document.getElementById('studio').value || 'A'; // default show for selected studio; but we should require studio selection
-  // But user might not pick studio yet; better require selecting studio before selecting date.
-  // Here we still show slots; but we'll show a notice if no studio chosen.
-  slotsContainer.innerHTML = '';
-  selectedDateLabel.textContent = `選択日: ${dateStr}`;
-  const studioVal = document.getElementById('studio').value;
-  if (!studioVal) {
-    slotsContainer.innerHTML = '<p class="text-sm col-span-3 text-red-500">先に「スタジオ」を選んでください（左上フォーム）。</p>';
-    toFormBtn.disabled = true;
-    return;
-  }
-  const resForDay = getReservationsFor(studioVal, dateStr);
-
-  for (let h = 7; h <= 22; h++){
-    const label = `${String(h).padStart(2,'0')}:00`;
-    const endLabel = `${String(h+1).padStart(2,'0')}:00`;
-    const div = document.createElement('div');
-    div.className = 'slot p-2 rounded text-sm text-center';
-    const booked = isSlotBooked(studioVal, dateStr, label);
-    if (booked) {
-      div.classList.add('disabled','busy');
-      div.innerHTML = `<div class="font-medium">${label}〜${endLabel}</div><div class="text-xs text-red-700">✕</div>`;
-    } else {
-      div.classList.add('free');
-      div.innerHTML = `<div class="font-medium">${label}〜${endLabel}</div><div class="text-xs text-green-700">〇</div>`;
-      div.addEventListener('click', () => toggleSlotSelect(studioVal, dateStr, label, endLabel, div));
-    }
-    slotsContainer.appendChild(div);
-  }
-  updateSelectedList();
-}
-
-function toggleSlotSelect(studio, date, start, end, divEl){
-  const key = `${studio}|${date}|${start}`;
-  const idx = selectedSlots.findIndex(s => `${s.studio}|${s.date}|${s.start}` === key);
-  if (idx >= 0){
-    selectedSlots.splice(idx,1);
-    divEl.classList.remove('selected');
-  } else {
-    // double-check current backend (localStorage) is still free (race prevention)
-    if (isSlotBooked(studio,date,start)){
-      alert('申し訳ありません。この時間は既に他の申込で確定しています。表示を更新します。');
-      renderSlotsFor(date);
-      return;
-    }
-    selectedSlots.push({ studio, date, start, end });
-    divEl.classList.add('selected');
-  }
-  updateSelectedList();
-}
-
-function updateSelectedList(){
-  selectedListEl.innerHTML = '';
-  if (selectedSlots.length === 0) {
-    selectedListEl.innerHTML = '<li class="text-sm text-gray-500">選択中の枠はありません</li>';
-    toFormBtn.disabled = true;
-  } else {
-    selectedSlots.forEach((s, i) => {
-      const li = document.createElement('li');
-      li.textContent = `${s.studio} / ${s.date} / ${s.start}〜${s.end}`;
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = '×';
-      removeBtn.className = 'ml-2 text-xs text-red-600';
-      removeBtn.addEventListener('click', () => {
-        // remove selection and re-render slots for that date if it's current
-        selectedSlots.splice(i,1);
-        if (s.date === currentSelectedDate) renderSlotsFor(s.date);
-        else updateSelectedList();
-      });
-      li.appendChild(removeBtn);
-      selectedListEl.appendChild(li);
-    });
-    toFormBtn.disabled = false;
-  }
-}
-
-/* ==========================
-   Date selection entrypoint
-   ========================== */
-function selectDate(ymd, dateObj){
-  currentSelectedDate = ymd;
-  // mark selected date in calendar (simple approach: re-render and highlight)
-  // (for simplicity we will not color cells differently in this demo)
-  renderSlotsFor(ymd);
-}
-
-/* ==========================
-   Navigation & wiring
-   ========================== */
-document.getElementById('toBookingBtn').addEventListener('click', () => {
-  if (!document.getElementById('agreeCheckbox').checked) { alert('利用規約に同意してください'); return; }
-  // scroll to calendar area
-  document.getElementById('calendarGrid').scrollIntoView({behavior:'smooth'});
-});
-
-document.getElementById('toFormBtn').addEventListener('click', () => {
-  if (selectedSlots.length === 0) return alert('少なくとも1つの枠を選択してください');
-  // show form section and fill confirmSlots summary
-  const confirmSlots = document.getElementById('confirmSlots');
-  confirmSlots.innerHTML = selectedSlots.map(s => `<div>${s.studio} / ${s.date} / ${s.start}〜${s.end}</div>`).join('');
-  document.getElementById('formSection').classList.remove('hidden');
-  window.scrollTo({ top: document.getElementById('formSection').offsetTop - 20, behavior:'smooth' });
-});
-
-clearSelectionBtn.addEventListener('click', () => {
-  selectedSlots = [];
-  if (currentSelectedDate) renderSlotsFor(currentSelectedDate);
-  updateSelectedList();
-});
-
-/* ==========================
-   Form submit & conflict checks
-   ========================== */
-document.getElementById('cancelFormBtn').addEventListener('click', () => {
-  document.getElementById('formSection').classList.add('hidden');
-});
-
-document.getElementById('submitBookingBtn').addEventListener('click', () => {
-  // gather
-  const name = document.getElementById('inputName').value.trim();
-  const org = document.getElementById('inputOrg').value.trim();
-  const address = document.getElementById('inputAddress').value.trim();
-  const phone = document.getElementById('inputPhone').value.trim();
-  const email = document.getElementById('inputEmail').value.trim();
-  const payment = document.getElementById('inputPayment').value;
-  if (!name || !address || !phone || !email || !payment) { alert('必須項目をすべて入力してください'); return; }
-  // re-check conflicts for each selected slot
-  const currentRes = loadReservations();
-  for (const s of selectedSlots) {
-    if (currentRes.some(r => r.studio === s.studio && r.date === s.date && r.start === s.start)) {
-      alert(`申し訳ありません。選択したうち ${s.date} ${s.start} は既に他の予約と重複しているため、処理を中断します。画面を更新してください。`);
-      // refresh view for that date
-      renderSlotsFor(s.date);
-      return;
-    }
-  }
-  // create booking id and save each slot as separate reservation, but same bookingId
-  const bookingId = 'BKG-' + Date.now();
-  const toSave = selectedSlots.map(s => ({
-    id: bookingId,
-    studio: s.studio,
-    date: s.date,
-    start: s.start,
-    end: s.end,
-    person: { name, org, address, phone, email },
-    payment,
-    savedAt: new Date().toISOString()
-  }));
-  const merged = currentRes.concat(toSave);
-  saveReservations(merged);
-
-  // reset selection and form
-  selectedSlots = [];
-  document.getElementById('formSection').classList.add('hidden');
-  document.getElementById('doneSection').classList.remove('hidden');
-  updateSelectedList();
-});
-
-document.getElementById('backToTopBtn').addEventListener('click', () => {
-  // go to top and reset UI to initial (terms visible)
-  window.scrollTo({ top:0, behavior:'smooth' });
-  document.getElementById('doneSection').classList.add('hidden');
-  // show terms again
-  // (we simply keep the current state; user can inspect list etc)
-});
-
-document.getElementById('viewReservationsBtn').addEventListener('click', () => {
-  document.getElementById('doneSection').classList.add('hidden');
-  showListSection();
-});
-
-/* ==========================
-   Reservations list / export
-   ========================== */
-function showListSection(){
-  document.getElementById('listSection').classList.remove('hidden');
-  const container = document.getElementById('listContainer');
-  const list = loadReservations();
-  container.innerHTML = '';
-  if (list.length === 0) { container.innerHTML = '<div class="text-sm text-gray-500">予約はありません</div>'; return; }
-  // group by booking id
-  const byId = {};
-  list.forEach(r => {
-    if (!byId[r.id]) byId[r.id] = [];
-    byId[r.id].push(r);
-  });
-  Object.keys(byId).sort().forEach(id => {
-    const group = byId[id];
-    const card = document.createElement('div');
-    card.className = 'p-3 border rounded';
-    const first = group[0];
-    card.innerHTML = `<div class="font-medium">${first.person.name} ${first.person.org ? '('+first.person.org+')' : ''}</div>
-      <div class="text-xs text-gray-600">代表: ${first.person.phone} / ${first.person.email}</div>
-      <div class="text-sm mt-2">${group.map(g => `${g.studio} ${g.date} ${g.start}〜${g.end}`).join('<br>')}</div>
-      <div class="text-xs text-gray-500 mt-2">支払い: ${first.payment === 'bank' ? '銀行振込' : '現地現金'}　保存日時: ${new Date(first.savedAt).toLocaleString()}</div>
-      <div class="mt-2 flex gap-2 justify-end"><button data-id="${id}" class="deleteBooking bg-red-500 text-white px-2 py-1 rounded text-xs">削除</button></div>`;
-    container.appendChild(card);
-  });
-  // attach delete handlers
-  qsa('.deleteBooking').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.target.dataset.id;
-      if (!confirm('この申込（複数枠含む）を本当に削除しますか？')) return;
-      let arr = loadReservations();
-      arr = arr.filter(r => r.id !== id);
-      saveReservations(arr);
-      showListSection();
-    });
-  });
-}
-
-document.getElementById('closeList').addEventListener('click', () => {
-  document.getElementById('listSection').classList.add('hidden');
-});
-
-document.getElementById('exportCsv').addEventListener('click', () => {
-  const list = loadReservations();
-  if (list.length === 0) { alert('予約がありません。'); return; }
-  const header = ['bookingId','studio','date','start','end','name','org','phone','email','payment','savedAt'];
-  const rows = [header.join(',')].concat(list.map(r => {
-    return [
-      r.id,
-      r.studio,
-      r.date,
-      r.start,
-      r.end,
-      `"${r.person.name.replace(/"/g,'""')}"`,
-      `"${(r.person.org||'').replace(/"/g,'""')}"`,
-      `"${r.person.phone}"`,
-      `"${r.person.email}"`,
-      r.payment,
-      r.savedAt
-    ].join(',');
-  }));
-  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'reservations.csv'; a.click();
-  URL.revokeObjectURL(url);
-});
-
-/* ==========================
-   Init
-   ========================== */
-function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
-function init(){
-  renderCalendar();
-  // default studio selection listener to re-render slots when studio changes
-  document.getElementById('studio').addEventListener('change', () => {
-    if (currentSelectedDate) renderSlotsFor(currentSelectedDate);
-  });
-  // if there are existing reservations and user navigates to calendar, they will be shown as ✕
-}
-init();
-</script>
-</body>
-</html>
+    <div class="calendar">
+      <label>利用日を選択：</label>
+      <input type="date" id="datePicker" min="" />
+      <p id="notice" style="color:#888;font-size:0.9rem;">※劇場同時申込の
