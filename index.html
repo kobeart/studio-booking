@@ -1,237 +1,245 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>神戸芸術センター・スタジオWEB予約</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Helvetica Neue', sans-serif;
-      background-color: #0b1a2e;
-      color: white;
-      overflow-x: hidden;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>神戸芸術センター・スタジオWEB予約</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Helvetica Neue', sans-serif;
+    background-color: #0b1a2e;
+    color: white;
+    overflow-x: hidden;
+  }
 
-    header {
-      text-align: center;
-      padding: 20px 10px;
-    }
+  header {
+    text-align: center;
+    padding: 20px 10px;
+  }
 
-    header h1 {
-      font-size: 1.8em;
-      margin: 0;
-      color: white;
-      text-shadow: 0 0 10px rgba(255,255,255,0.4);
-    }
+  header h1 {
+    font-size: 1.8em;
+    margin: 0;
+    color: white;
+    text-shadow: 0 0 10px rgba(255,255,255,0.4);
+  }
 
-    .user-info {
-      font-size: 1em;
-      margin-top: 4px;
-    }
+  .user-info {
+    font-size: 1em;
+    margin-top: 4px;
+  }
 
-    .user-info a {
-      color: #d0e0ff;
-      text-decoration: underline;
-      margin-left: 8px;
-      cursor: pointer;
-    }
+  .user-info a {
+    color: #d0e0ff;
+    text-decoration: underline;
+    margin-left: 8px;
+    cursor: pointer;
+  }
 
-    .instructions {
-      background-color: rgba(255,255,255,0.05);
-      color: #eee;
-      padding: 10px 15px;
-      font-size: 0.95em;
-      text-align: left;
-    }
+  .instructions {
+    background-color: rgba(255,255,255,0.05);
+    color: #eee;
+    padding: 10px 15px;
+    font-size: 0.95em;
+    text-align: left;
+  }
 
-    .calendar-container {
-      text-align: center;
-      margin-top: 10px;
-    }
+  .calendar-container {
+    text-align: center;
+    margin-top: 10px;
+  }
 
-    .calendar-header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 5px;
-    }
+  .calendar-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+  }
 
-    .month-nav {
-      background-color: #9eb7c4;
-      border: none;
-      color: #000;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+  .month-nav {
+    background-color: #9eb7c4;
+    border: none;
+    color: #000;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
 
-    .month-name {
-      font-size: 1.3em;
-      color: white;
-      animation: glowWhite 2s infinite alternate;
-      padding: 5px 12px;
-      border-radius: 8px;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
-    }
+  .month-name {
+    font-size: 1.3em;
+    color: white;
+    animation: glowWhite 2s infinite alternate;
+    padding: 5px 12px;
+    border-radius: 8px;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
+  }
 
-    @keyframes glowWhite {
-      0% { text-shadow: 0 0 8px rgba(255,255,255,0.3); }
-      100% { text-shadow: 0 0 20px rgba(255,255,255,0.8); }
-    }
+  @keyframes glowWhite {
+    0% { text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+    100% { text-shadow: 0 0 20px rgba(255,255,255,0.8); }
+  }
 
-    .calendar {
-      display: inline-grid;
-      grid-template-columns: repeat(7, 40px);
-      gap: 4px;
-      justify-content: center;
-    }
+  .calendar {
+    display: inline-grid;
+    grid-template-columns: repeat(7, 40px);
+    gap: 4px;
+    justify-content: center;
+  }
 
-    .day-name {
-      font-weight: bold;
-      font-size: 0.9em;
-    }
+  .day-name {
+    font-weight: bold;
+    font-size: 0.9em;
+  }
 
-    .saturday { color: #a8d8ff; }
-    .sunday { color: #e3c37d; }
+  .saturday { color: #a8d8ff; }
+  .sunday { color: #e3c37d; }
 
-    .day, .day-empty {
-      width: 40px;
-      height: 40px;
-      line-height: 40px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+  .day, .day-empty {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
 
-    .day:hover {
-      background-color: rgba(255,255,255,0.1);
-    }
+  .day:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
 
-    .selected-day {
-      background: radial-gradient(circle at center, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
-      box-shadow: 0 0 15px rgba(255,255,255,0.8);
-      color: white;
-      font-weight: bold;
-    }
+  .selected-day {
+    background: radial-gradient(circle at center, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+    box-shadow: 0 0 15px rgba(255,255,255,0.8);
+    color: white;
+    font-weight: bold;
+  }
 
-    .studio-section {
-      margin-top: 25px;
-      text-align: center;
-    }
+  .studio-section {
+    margin-top: 25px;
+    text-align: center;
+  }
 
-    .studios {
-      display: flex;
-      justify-content: center;
-      gap: 4px;
-      margin-bottom: 10px;
-    }
+  .studios {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
 
-    .studio {
-      flex: 1;
-      padding: 8px 0;
-      border-radius: 6px;
-      font-weight: bold;
-      color: #000;
-      text-align: center;
-      line-height: 1.4em;
-      font-size: 0.9em;
-      min-width: 65px;
-    }
+  /* 🎨 スタジオカラー更新 */
+  .studio {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #000;
+    text-align: center;
+    line-height: 1.4em;
+    font-size: 0.9em;
+    min-width: 65px;
+  }
 
-    .studio.A { background-color: #e7c1cb; }
-    .studio.B { background-color: #c2e4f2; }
-    .studio.C { background-color: #b9e2b9; }
-    .studio.EF { background-color: #aebfe6; }
-    .studio.R { background-color: #f3e6b3; }
+  .studio.A { background-color: #cc7b9b; }
+  .studio.B { background-color: #7aa6c7; }
+  .studio.C { background-color: #7fc980; }
+  .studio.EF { background-color: #7988c7; }
+  .studio.R { background-color: #d9c46e; }
 
-    .time-slots {
-      display: flex;
-      justify-content: center;
-      gap: 4px;
-      margin-bottom: 20px;
-    }
+  .time-slots {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
 
-    .slot-column {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
+  .slot-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
 
-    .slot {
-      width: 80px;
-      height: 35px;
-      line-height: 35px;
-      border-radius: 6px;
-      font-size: 0.85em;
-      cursor: pointer;
-      color: #000;
-      transition: all 0.2s ease;
-      background-color: rgba(255,255,255,0.65);
-      border: 1px solid rgba(0,0,0,0.05);
-    }
+  .slot {
+    width: 80px;
+    height: 35px;
+    line-height: 35px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    color: #000;
+    transition: all 0.2s ease;
+    background-color: rgba(255,255,255,0.65);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
 
-    .slot:hover {
-      transform: scale(1.05);
-      background-color: rgba(255,255,255,0.9);
-    }
+  .slot:hover {
+    transform: scale(1.05);
+    background-color: rgba(255,255,255,0.9);
+  }
 
-    .slot.selected {
-      outline: 3px solid gold;
-      background-color: rgba(255,255,150,0.8);
-    }
+  .slot.selected {
+    outline: 3px solid gold;
+    background-color: rgba(255,255,150,0.8);
+  }
 
-    .selected-list {
-      text-align: center;
-      margin-top: 20px;
-    }
+  .selected-list {
+    text-align: center;
+    margin-top: 20px;
+  }
 
-    .selected-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-radius: 6px;
-      margin: 5px auto;
-      padding: 8px 12px;
-      width: 90%;
-      color: black;
-      font-size: 0.9em;
-    }
+  .selected-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 6px;
+    margin: 5px auto;
+    padding: 8px 12px;
+    width: 90%;
+    color: black;
+    font-size: 0.9em;
+  }
 
-    .selected-item button {
-      background: none;
-      border: none;
-      color: black;
-      font-size: 0.8em;
-      cursor: pointer;
-    }
+  .selected-item button {
+    background: none;
+    border: none;
+    color: black;
+    font-size: 0.8em;
+    cursor: pointer;
+  }
 
-    .total {
-      font-weight: bold;
-      color: white;
-      margin-top: 8px;
-    }
+  .total {
+    font-weight: bold;
+    color: white;
+    margin-top: 8px;
+  }
 
-    .proceed-btn {
-      display: block;
-      margin: 25px auto;
-      padding: 12px 24px;
-      font-size: 1.1em;
-      color: white;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      animation: glowWhite 2s infinite alternate;
-    }
+  /* ✨ 発光ボタン：白文字・薄発光（ホワイト） */
+  .proceed-btn {
+    display: block;
+    margin: 25px auto;
+    padding: 12px 24px;
+    font-size: 1.1em;
+    color: white;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.25), rgba(255,255,255,0.05));
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    animation: whiteSoft 2s infinite alternate;
+  }
 
-    .proceed-btn:hover {
-      transform: scale(1.05);
-    }
-  </style>
+  @keyframes whiteSoft {
+    from { box-shadow: 0 0 10px rgba(255,255,255,0.3), 0 0 20px rgba(255,255,255,0.2); }
+    to   { box-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4); }
+  }
+
+  .proceed-btn:hover {
+    transform: scale(1.05);
+  }
+</style>
 </head>
 
 <body>
@@ -262,8 +270,6 @@
       <div class="day-name">金</div>
       <div class="day-name saturday">土</div>
       <div class="day-name sunday">日</div>
-
-      <!-- サンプル日付 -->
       <div class="day">1</div>
       <div class="day">2</div>
       <div class="day saturday">3</div>
@@ -279,46 +285,6 @@
       <div class="studio C">C<br>￥1980</div>
       <div class="studio EF">EF<br>￥2310</div>
       <div class="studio R">R<br>￥2090</div>
-    </div>
-
-    <div class="time-slots">
-      <div class="slot-column">
-        <div class="slot">7:00-8:00<br>〇</div>
-        <div class="slot">8:00-9:00<br>〇</div>
-        <div class="slot">9:00-10:00<br>×</div>
-      </div>
-      <div class="slot-column">
-        <div class="slot">7:00-8:00<br>〇</div>
-        <div class="slot">8:00-9:00<br>×</div>
-        <div class="slot">9:00-10:00<br>〇</div>
-      </div>
-      <div class="slot-column">
-        <div class="slot">7:00-8:00<br>×</div>
-        <div class="slot">8:00-9:00<br>〇</div>
-        <div class="slot">9:00-10:00<br>〇</div>
-      </div>
-      <div class="slot-column">
-        <div class="slot">7:00-8:00<br>〇</div>
-        <div class="slot">8:00-9:00<br>〇</div>
-        <div class="slot">9:00-10:00<br>〇</div>
-      </div>
-      <div class="slot-column">
-        <div class="slot">7:00-8:00<br>〇</div>
-        <div class="slot">8:00-9:00<br>〇</div>
-        <div class="slot">9:00-10:00<br>〇</div>
-      </div>
-    </div>
-
-    <div class="selected-list">
-      <div class="selected-item" style="background-color:#c2e4f2">
-        2025-11-22（土）15時〜16時<br>スタジオB ￥1100
-        <button>削除</button>
-      </div>
-      <div class="selected-item" style="background-color:#f3e6b3">
-        2025-11-23（日）9時〜10時<br>スタジオR ￥2090
-        <button>削除</button>
-      </div>
-      <div class="total">合計：￥3190（税込）</div>
     </div>
   </div>
 
