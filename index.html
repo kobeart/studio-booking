@@ -6,7 +6,6 @@
 <title>神戸芸術センター・スタジオWEB予約</title>
 
 <script type="module">
-/* Firebase (既存プロジェクト) */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -20,231 +19,406 @@ const firebaseConfig = {
   appId: "1:485178815055:web:f91792229f8c359cf1303a",
   measurementId: "G-EF147DP6ZB"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* 設定 */
 const studioInfo = {
   A: { color: "#ffb6c1", price: 1100 },
   B: { color: "#add8e6", price: 1100 },
   C: { color: "#98fb98", price: 1980 },
-  EF:{ color: "#87cefa", price: 2310 },
+  EF: { color: "#87cefa", price: 2310 },
   R: { color: "#fffacd", price: 2090 }
 };
 
-const HOURS = Array.from({length:15},(_,i)=>7+i);
+const HOURS = Array.from({ length: 15 }, (_, i) => 7 + i);
 let selectedDate = null;
 let selectedSlots = [];
 
-/* 認証チェック */
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "register.html";
   } else {
-    const el = document.getElementById("user-email");
-    if (el) el.textContent = user.email + " 様";
+    document.getElementById("user-email").textContent = user.email + " 様";
   }
 });
 
-/* ログアウト */
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "register.html";
 };
 
-/* カレンダー描画 */
 let currentDate = new Date();
-function pad(n){ return n<10?'0'+n:n; }
+function pad(n) {
+  return n < 10 ? "0" + n : n;
+}
 
-function renderCalendar(){
+function renderCalendar() {
   const calendar = document.getElementById("calendar");
   calendar.innerHTML = "";
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month+1, 0);
+  const lastDay = new Date(year, month + 1, 0);
   const today = new Date();
 
-  document.getElementById("calendar-title").textContent = `${year}年${month+1}月`;
+  document.getElementById("calendar-title").textContent = `${year}年${month + 1}月`;
 
-  const weekdays = ["月","火","水","木","金","土","日"];
+  const weekdays = ["月", "火", "水", "木", "金", "土", "日"];
   const header = document.createElement("div");
   header.className = "weekdays";
-  weekdays.forEach(w=>{
+  weekdays.forEach((w) => {
     const wel = document.createElement("div");
     wel.textContent = w;
-    if (w==="日") wel.style.color="#ff8080";
-    if (w==="土") wel.style.color="#7ec8ff";
+    if (w === "日") wel.style.color = "#ff8080";
+    if (w === "土") wel.style.color = "#7ec8ff";
     header.appendChild(wel);
   });
   calendar.appendChild(header);
 
   const days = document.createElement("div");
   days.className = "days";
-  const blankCount = (firstDay.getDay()+6)%7;
-  for(let i=0;i<blankCount;i++){
-    const b=document.createElement("div");b.className="day blank";days.appendChild(b);
+  const blankCount = (firstDay.getDay() + 6) % 7;
+  for (let i = 0; i < blankCount; i++) {
+    const b = document.createElement("div");
+    b.className = "day blank";
+    days.appendChild(b);
   }
 
-  for(let d=1;d<=lastDay.getDate();d++){
-    const dateObj=new Date(year,month,d);
-    const dow=dateObj.getDay();
-    const dayDiv=document.createElement("div");
-    dayDiv.className="day";
-    dayDiv.textContent=d;
-    if(dow===0)dayDiv.style.color="#ff8080";
-    if(dow===6)dayDiv.style.color="#7ec8ff";
-    const isPast=dateObj<new Date(today.getFullYear(),today.getMonth(),today.getDate());
-    if(!isPast){
-      dayDiv.addEventListener("click",(ev)=>selectDate(year,month+1,d,dow,ev.currentTarget));
-    }else{dayDiv.style.opacity="0.35";}
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateObj = new Date(year, month, d);
+    const dow = dateObj.getDay();
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "day";
+    dayDiv.textContent = d;
+    if (dow === 0) dayDiv.style.color = "#ff8080";
+    if (dow === 6) dayDiv.style.color = "#7ec8ff";
+    const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (!isPast) {
+      dayDiv.addEventListener("click", (ev) => selectDate(year, month + 1, d, dow, ev.currentTarget));
+    } else {
+      dayDiv.style.opacity = "0.35";
+    }
     days.appendChild(dayDiv);
   }
   calendar.appendChild(days);
 }
 
-window.nextMonth=()=>{const now=new Date();const sixLater=new Date(now.getFullYear(),now.getMonth()+6,1);
-  if(currentDate<sixLater){currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();}
+window.nextMonth = () => {
+  const now = new Date();
+  const sixLater = new Date(now.getFullYear(), now.getMonth() + 6, 1);
+  if (currentDate < sixLater) {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  }
 };
-window.prevMonth=()=>{const now=new Date();
-  if(currentDate.getFullYear()>now.getFullYear()||currentDate.getMonth()>now.getMonth()){
-    currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();}
+window.prevMonth = () => {
+  const now = new Date();
+  if (currentDate.getFullYear() > now.getFullYear() || currentDate.getMonth() > now.getMonth()) {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  }
 };
 
-/* 日付選択時のスタジオテーブル描画 */
-async function selectDate(year,month,day,dow,clickedEl){
-  const dayNames=["日","月","火","水","木","金","土"];
-  const dayName=dayNames[dow];
-  selectedDate=`${year}-${month}-${day}`;
-  document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected"));
-  if(clickedEl)clickedEl.classList.add("selected");
+async function selectDate(year, month, day, dow, clickedEl) {
+  const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
+  const dayName = dayNames[dow];
+  selectedDate = `${year}-${month}-${day}`;
+  document.querySelectorAll(".day").forEach((d) => d.classList.remove("selected"));
+  if (clickedEl) clickedEl.classList.add("selected");
 
-  const container=document.getElementById("studio-area");
-  container.innerHTML="";
+  const container = document.getElementById("studio-area");
+  container.innerHTML = "";
 
-  const headerRow=document.createElement("div");
-  headerRow.className="table-row header-row";
-  for(const s of Object.keys(studioInfo)){
-    const scell=document.createElement("div");
-    scell.className="table-cell studio-cell";
-    scell.textContent=`スタジオ${s}\n¥${studioInfo[s].price.toLocaleString()}`;
-    scell.style.background=studioInfo[s].color;
+  const headerRow = document.createElement("div");
+  headerRow.className = "table-row header-row";
+  for (const s of Object.keys(studioInfo)) {
+    const scell = document.createElement("div");
+    scell.className = "table-cell studio-cell";
+    scell.textContent = `スタジオ${s}\n¥${studioInfo[s].price.toLocaleString()}`;
+    scell.style.background = "#000";
+    scell.style.color = "#fff";
     headerRow.appendChild(scell);
   }
   container.appendChild(headerRow);
 
-  for(const h of HOURS){
-    const row=document.createElement("div");
-    row.className="table-row";
-    for(const s of Object.keys(studioInfo)){
-      const cell=document.createElement("div");
-      cell.className="table-cell slot-cell";
-      cell.style.background=studioInfo[s].color+"33";
-      cell.dataset.studio=s;cell.dataset.hour=h;cell.dataset.date=selectedDate;
-      const start=pad(h)+":00";const end=pad(h+1)+":00";
-      const label=document.createElement("div");
-      label.className="slot-label";label.textContent=`${start}〜${end}`;
+  for (const h of HOURS) {
+    const row = document.createElement("div");
+    row.className = "table-row";
+    for (const s of Object.keys(studioInfo)) {
+      const cell = document.createElement("div");
+      cell.className = "table-cell slot-cell";
+      cell.style.background = studioInfo[s].color + "33";
+      cell.dataset.studio = s;
+      cell.dataset.hour = h;
+      cell.dataset.date = selectedDate;
+      const start = pad(h) + ":00";
+      const end = pad(h + 1) + ":00";
+      const label = document.createElement("div");
+      label.className = "slot-label";
+      label.textContent = `${start}〜${end}`;
       cell.appendChild(label);
-      try{
-        const id=`${s}_${selectedDate}_${h}`;
-        const docRef=doc(db,"reservations",id);
-        const snap=await getDoc(docRef);
-        if(snap.exists()){
-          const mark=document.createElement("div");
-          mark.className="slot-mark booked-mark";mark.textContent="✕";cell.appendChild(mark);
+
+      try {
+        const id = `${s}_${selectedDate}_${h}`;
+        const docRef = doc(db, "reservations", id);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const mark = document.createElement("div");
+          mark.className = "slot-mark booked-mark";
+          mark.textContent = "✕";
+          cell.appendChild(mark);
           cell.classList.add("booked");
-        }else{
-          const mark=document.createElement("div");
-          mark.className="slot-mark avail-mark";mark.textContent="○";cell.appendChild(mark);
-          cell.addEventListener("click",()=>toggleSlot(s,selectedDate,h,dayName,cell));
+        } else {
+          const mark = document.createElement("div");
+          mark.className = "slot-mark avail-mark";
+          mark.textContent = "○";
+          cell.appendChild(mark);
+          cell.addEventListener("click", () => toggleSlot(s, selectedDate, h, dayName, cell));
         }
-      }catch(err){console.error(err);}
+      } catch (err) {
+        console.error(err);
+      }
       row.appendChild(cell);
     }
     container.appendChild(row);
   }
 }
 
-/* 選択処理 */
-function toggleSlot(studio,date,hour,dayName,cellEl){
-  const key=`${date}_${studio}_${hour}`;
-  const idx=selectedSlots.findIndex(x=>x.key===key);
-  const price=studioInfo[studio].price;
-  const label=`${date}（${dayName}）${hour.toString().padStart(2,'0')}:00〜${(hour+1).toString().padStart(2,'0')}:00　スタジオ${studio}　${price.toLocaleString()}円`;
+function toggleSlot(studio, date, hour, dayName, cellEl) {
+  const key = `${date}_${studio}_${hour}`;
+  const idx = selectedSlots.findIndex((x) => x.key === key);
+  const price = studioInfo[studio].price;
+  const label = `${date}（${dayName}）${hour.toString().padStart(2, "0")}:00〜${(hour + 1)
+    .toString()
+    .padStart(2, "0")}:00　スタジオ${studio}　${price.toLocaleString()}円`;
 
-  if(idx>=0){
-    selectedSlots.splice(idx,1);
+  if (idx >= 0) {
+    selectedSlots.splice(idx, 1);
     cellEl.classList.remove("selected");
-    document.querySelectorAll("#selected-info .selected-item").forEach(it=>{if(it.textContent===label)it.remove();});
-  }else{
-    selectedSlots.push({key,date,studio,hour,label,price});
+    document.querySelectorAll("#selected-info .selected-item").forEach((it) => {
+      if (it.textContent === label) it.remove();
+    });
+  } else {
+    selectedSlots.push({ key, date, studio, hour, label, price });
     cellEl.classList.add("selected");
-    const item=document.createElement("div");
-    item.className="selected-item";
-    item.textContent=label;
-    item.style.background=studioInfo[studio].color;
+    const item = document.createElement("div");
+    item.className = "selected-item";
+    item.textContent = label;
+    item.style.background = studioInfo[studio].color;
     document.getElementById("selected-info").appendChild(item);
   }
   updateTotal();
 }
 
-function updateTotal(){
-  const total=selectedSlots.reduce((s,x)=>s+x.price,0);
-  document.getElementById("total-price").textContent=`合計金額：${total.toLocaleString()}円（税込）`;
+function updateTotal() {
+  const total = selectedSlots.reduce((s, x) => s + x.price, 0);
+  document.getElementById("total-price").textContent = `合計金額：${total.toLocaleString()}円（税込）`;
 }
 
-/* 予約へ進む */
-window.goConfirm=()=>{
-  if(selectedSlots.length===0){alert("予約枠を選択してください。");return;}
-  localStorage.setItem("selectedSlots",JSON.stringify(selectedSlots));
-  window.location.href="confirm.html";
+window.goConfirm = () => {
+  if (selectedSlots.length === 0) {
+    alert("予約枠を選択してください。");
+    return;
+  }
+  localStorage.setItem("selectedSlots", JSON.stringify(selectedSlots));
+  window.location.href = "confirm.html";
 };
 
 renderCalendar();
 </script>
 
 <style>
-:root{--navy:#0a1a2f;--accent:#7ec8ff;--gold:gold;}
-body{margin:0;background:var(--navy);color:#fff;font-family:"Hiragino Sans","Yu Gothic",sans-serif;}
-header{background:#112244;padding:14px 20px;text-align:center;font-weight:700;font-size:1.1rem;}
-#logout-link{color:#fff;text-decoration:underline;cursor:pointer;margin-left:10px;}
-#logout-link:hover{color:var(--accent);}
-.instructions{max-width:960px;margin:12px auto;padding:8px 16px;font-size:0.95rem;line-height:1.6;background:rgba(255,255,255,0.05);border-radius:8px;}
-.controls{display:flex;justify-content:center;gap:12px;padding:12px;}
-.btn{background:var(--accent);color:#012;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700;}
-#calendar{max-width:980px;margin:0 auto;padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;}
-.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;font-weight:700;}
-.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-.day{background:rgba(255,255,255,0.06);padding:10px;border-radius:6px;cursor:pointer;text-align:center;}
-.day.selected{background:#0078ff;box-shadow:0 0 8px rgba(0,120,255,0.5);}
-.table-container{max-width:980px;margin:18px auto;background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;overflow:auto;}
-.table-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:center;margin-bottom:8px;}
-.table-cell{padding:8px;border-radius:6px;text-align:center;font-weight:700;}
-.slot-cell{height:58px;position:relative;cursor:pointer;color:#fff;}
-.slot-cell.selected{outline:3px solid var(--gold);box-shadow:0 0 12px rgba(255,215,0,0.8);}
-.slot-label{font-size:13px;}
-.booked{opacity:0.6;cursor:not-allowed;}
-.slot-mark{position:absolute;right:6px;top:6px;}
-#selected-info{text-align:center;margin-top:16px;}
-.selected-item{margin:6px auto;padding:8px 12px;border-radius:10px;color:#000;font-weight:700;max-width:90%;}
-#total-price{text-align:center;color:var(--accent);font-weight:800;margin-top:10px;}
-.footer-panel{max-width:980px;margin:20px auto;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;color:#ddd;font-size:0.95rem;line-height:1.6;}
+:root {
+  --navy: #0a1a2f;
+  --accent: #7ec8ff;
+  --gold: gold;
+}
+
+body {
+  margin: 0;
+  background: var(--navy);
+  color: #fff;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  text-align: center;
+}
+header {
+  background: #112244;
+  padding: 20px 10px 10px 10px;
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-align: center;
+  line-height: 1.5;
+}
+#logout-link {
+  color: #fff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+#logout-link:hover {
+  color: var(--accent);
+}
+.instructions {
+  max-width: 960px;
+  margin: 12px auto;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+}
+.btn {
+  background: var(--accent);
+  color: #012;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 0 10px rgba(126, 200, 255, 0.4);
+}
+#calendar {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+}
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.day {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+.day.selected {
+  animation: glow 1.5s infinite alternate;
+  color: #fff;
+  text-shadow: 0 0 8px gold, 0 0 12px gold;
+}
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px gold;
+  }
+  to {
+    box-shadow: 0 0 15px gold;
+  }
+}
+.table-container {
+  max-width: 980px;
+  margin: 18px auto;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px;
+  border-radius: 10px;
+  overflow: auto;
+}
+.table-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.table-cell {
+  padding: 6px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 700;
+}
+.studio-cell {
+  font-size: 0.9rem;
+  padding: 10px 4px;
+}
+.slot-cell {
+  height: 58px;
+  position: relative;
+  cursor: pointer;
+  color: #fff;
+}
+.slot-cell.selected {
+  outline: 3px solid var(--gold);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+.slot-label {
+  font-size: 13px;
+}
+.booked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.slot-mark {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+}
+#selected-info {
+  text-align: center;
+  margin-top: 16px;
+}
+.selected-item {
+  margin: 6px auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #000;
+  font-weight: 700;
+  max-width: 90%;
+}
+#total-price {
+  text-align: center;
+  color: var(--accent);
+  font-weight: 800;
+  margin-top: 10px;
+  font-size: 1.1rem;
+}
+@media (max-width: 600px) {
+  .studio-cell {
+    font-size: 0.8rem;
+  }
+  .slot-cell {
+    height: 48px;
+  }
+  .btn {
+    width: 80%;
+    font-size: 1rem;
+  }
+}
 </style>
 </head>
 
 <body>
 <header>
-  神戸芸術センター・スタジオWEB予約　
-  <span style="font-weight:400;font-size:0.9rem;">ログイン中：<span id="user-email"></span>
-  <span id="logout-link" onclick="logout()">ログアウト</span></span>
+  神戸芸術センター・スタジオWEB予約<br>
+  <span id="user-email"></span>　｜　<span id="logout-link" onclick="logout()">ログアウト</span>
 </header>
 
 <div class="instructions">
-  カレンダーから日付を選び各スタジオの利用時間を選択してください。
-  選択したご利用内容がページ下部に表示されます。
-  全ての選択が終わったら「予約へ進む」を押してください。
-  毎月1日の午前9時に、その月から6ヶ月先の月末までの予約が可能になります。
+  カレンダーから日付を選び、各スタジオの利用時間を選択してください。<br>
+  選択したご利用内容がページ下部に表示されます。<br>
+  全ての選択が終わったら「予約へ進む」をクリックしてください。<br>
+  予約は6ヶ月先の月末まで受け付けしています。<br>
+  毎月1日の午前9時に、その月から6ヶ月先の予約が可能になります。
 </div>
 
 <div class="controls">
@@ -263,25 +437,7 @@ header{background:#112244;padding:14px 20px;text-align:center;font-weight:700;fo
 <div id="total-price"></div>
 
 <div style="text-align:center;margin-top:20px;">
-  <button class="btn" onclick="goConfirm()">予約へ進む</button>
-</div>
-
-<div class="footer-panel">
-  <p><strong>キャンセル料（スタジオA/B/C/EF/R共通）</strong></p>
-  <ul>
-    <li>利用日3ヶ月前〜30日前：施設利用料金の50％</li>
-    <li>利用日29日前〜当日：施設利用料金の100％</li>
-    <li>天災などにより当館が営業不可能となった場合は全額返金</li>
-    <li>返金時は銀行振込手数料＋払戻手数料1,000円を差し引きます</li>
-    <li>ご利用日・ご利用施設の変更はキャンセル扱いになります</li>
-  </ul>
-  <p><strong>支払い・連絡先</strong><br>
-  支払い方法：銀行振込または現地現金支払いのみ<br>
-  神戸芸術センター総合受付　TEL：078-241-7477（受付 9:00–12:00 / 13:00–18:00）<br>
-  住所：神戸市中央区熊内橋通7-1-13
-  </p>
+  <button class="btn" style="font-size:1.3rem;padding:18px 30px;" onclick="goConfirm()">予約へ進む</button>
 </div>
 </body>
 </html>
-
-
