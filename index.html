@@ -15,19 +15,19 @@
     }
 
     header {
-      margin-top: 1.5rem;
-      line-height: 1.6;
+      margin-top: 1rem;
+      line-height: 1.4;
     }
 
     header h1 {
-      font-size: 1.8rem;
+      font-size: 1.4rem;
       font-weight: 700;
       margin: 0.5rem 0;
     }
 
     .user-info {
       font-size: 0.9rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
 
     .logout-link {
@@ -38,11 +38,12 @@
 
     .description {
       text-align: left;
-      width: 90%;
-      max-width: 800px;
-      margin: 0 auto 1rem auto;
-      font-size: 0.95rem;
-      line-height: 1.6;
+      width: 100%;
+      background-color: #1c2541;
+      color: #fff;
+      padding: 0.6rem 5%;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
     }
 
     .calendar-nav {
@@ -54,8 +55,8 @@
     }
 
     .calendar-nav button {
-      padding: 0.3rem 0.8rem;
-      font-size: 0.9rem;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
       cursor: pointer;
       background-color: #1c2541;
       border: none;
@@ -74,7 +75,7 @@
       padding: 0.3rem 1rem;
       font-size: 1rem;
       font-weight: 600;
-      min-width: 110px;
+      min-width: 120px;
     }
 
     .calendar {
@@ -113,6 +114,14 @@
       font-weight: bold;
     }
 
+    .calendar div.saturday {
+      color: #87cefa;
+    }
+
+    .calendar div.sunday {
+      color: #ffd700;
+    }
+
     @keyframes glow {
       from {
         box-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700;
@@ -136,12 +145,13 @@
       font-weight: bold;
       color: #000;
       border-radius: 4px;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      text-align: center;
     }
 
     .time-slot {
       border-radius: 4px;
-      padding: 0.5rem 0;
+      padding: 0.4rem 0;
       margin: 2px 0;
       color: #000;
       font-size: 0.8rem;
@@ -170,6 +180,7 @@
       justify-content: space-between;
       align-items: center;
       font-size: 0.9rem;
+      color: #000;
     }
 
     .delete-btn {
@@ -225,7 +236,7 @@
   <header>
     <h1>神戸芸術センター・スタジオWEB予約</h1>
     <div class="user-info">
-      <span id="userName">ユーザー名</span> 様　
+      <span id="userName">ゲスト</span> 様　
       <a class="logout-link" href="#">ログアウト</a>
     </div>
   </header>
@@ -241,12 +252,10 @@
   </div>
 
   <div class="calendar" id="calendar"></div>
-
   <div class="studio-grid" id="studioGrid"></div>
 
   <div class="selection-list" id="selectionList"></div>
   <div class="total" id="totalAmount">合計金額：¥0</div>
-
   <button class="confirm-btn" id="confirmReservation">予約へ進む</button>
 
   <footer>
@@ -260,7 +269,6 @@
   </footer>
 
   <script>
-    // ---------- カレンダー生成 ----------
     const calendarEl = document.getElementById("calendar");
     const monthLabel = document.getElementById("monthLabel");
     const studioGrid = document.getElementById("studioGrid");
@@ -268,11 +276,11 @@
     const totalAmount = document.getElementById("totalAmount");
 
     const studios = [
-      { id: "A", name: "スタジオA", color: "#ffb6c1", price: 1100 },
-      { id: "B", name: "スタジオB", color: "#add8e6", price: 1100 },
-      { id: "C", name: "スタジオC", color: "#98fb98", price: 1980 },
-      { id: "EF", name: "スタジオEF", color: "#87cefa", price: 2310 },
-      { id: "R", name: "スタジオR", color: "#fffacd", price: 2090 },
+      { id: "A", name: "A", color: "#ffb6c1", price: 1100 },
+      { id: "B", name: "B", color: "#add8e6", price: 1100 },
+      { id: "C", name: "C", color: "#98fb98", price: 1980 },
+      { id: "EF", name: "EF", color: "#87cefa", price: 2310 },
+      { id: "R", name: "R", color: "#fffacd", price: 2090 },
     ];
 
     let selectedDate = new Date();
@@ -293,10 +301,12 @@
       const startDay = (start.getDay() + 6) % 7; // 月曜始まり
 
       const dayNames = ["月", "火", "水", "木", "金", "土", "日"];
-      dayNames.forEach(d => {
+      dayNames.forEach((d, i) => {
         const div = document.createElement("div");
         div.textContent = d;
         div.classList.add("day-name");
+        if (i === 5) div.classList.add("saturday");
+        if (i === 6) div.classList.add("sunday");
         calendarEl.appendChild(div);
       });
 
@@ -306,11 +316,14 @@
       }
 
       const today = new Date();
-
       for (let day = 1; day <= end.getDate(); day++) {
         const div = document.createElement("div");
-        div.textContent = day;
         const thisDate = new Date(year, month, day);
+        div.textContent = day;
+        const dayOfWeek = thisDate.getDay();
+
+        if (dayOfWeek === 6) div.classList.add("saturday");
+        if (dayOfWeek === 0) div.classList.add("sunday");
 
         if (thisDate >= today) {
           div.classList.add("available");
@@ -336,51 +349,47 @@
 
     function renderStudios(date) {
       studioGrid.innerHTML = "";
-
       const timeSlots = Array.from({ length: 15 }, (_, i) => `${7 + i}:00〜${8 + i}:00`);
 
-      // スタジオ名行
       studios.forEach(studio => {
         const div = document.createElement("div");
-        div.textContent = studio.name;
         div.className = "studio-header";
         div.style.backgroundColor = studio.color;
+        div.innerHTML = `${studio.name}<br>￥${studio.price}`;
         studioGrid.appendChild(div);
       });
 
-      // 時間枠行
       for (let t of timeSlots) {
         studios.forEach(studio => {
           const slot = document.createElement("div");
           slot.className = "time-slot";
-          slot.textContent = t;
-          slot.style.backgroundColor = studio.color;
+          slot.textContent = Math.random() > 0.25 ? "〇" : "×";
+          slot.style.backgroundColor = studio.color + "cc";
 
           const key = `${date.toDateString()}_${studio.id}_${t}`;
+          if (selectedSlots.find(s => s.key === key)) slot.classList.add("selected");
 
-          if (selectedSlots.find(s => s.key === key)) {
-            slot.classList.add("selected");
+          if (slot.textContent === "〇") {
+            slot.addEventListener("click", () => {
+              const existing = selectedSlots.findIndex(s => s.key === key);
+              if (existing >= 0) {
+                selectedSlots.splice(existing, 1);
+                slot.classList.remove("selected");
+              } else {
+                selectedSlots.push({
+                  key,
+                  date: `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
+                  studio: studio.name,
+                  time: t,
+                  price: studio.price,
+                  color: studio.color
+                });
+                slot.classList.add("selected");
+              }
+              saveSelections();
+              renderSelectionList();
+            });
           }
-
-          slot.addEventListener("click", () => {
-            const existing = selectedSlots.findIndex(s => s.key === key);
-            if (existing >= 0) {
-              selectedSlots.splice(existing, 1);
-              slot.classList.remove("selected");
-            } else {
-              selectedSlots.push({
-                key,
-                date: `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
-                studio: studio.name,
-                time: t,
-                price: studio.price,
-                color: studio.color
-              });
-              slot.classList.add("selected");
-            }
-            saveSelections();
-            renderSelectionList();
-          });
           studioGrid.appendChild(slot);
         });
       }
@@ -414,6 +423,9 @@
         });
       });
     }
+
+    // 仮ログインユーザー名
+    document.getElementById("userName").textContent = "山田太郎";
 
     renderCalendar();
     renderSelectionList();
