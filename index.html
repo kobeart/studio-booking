@@ -1,378 +1,327 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>神戸芸術センター・スタジオWEB予約</title>
-<style>
-  body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
-    background-color: #0a1a2f;
-    color: white;
-    margin: 0;
-    overflow-x: hidden;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>神戸芸術センター・スタジオWEB予約</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #0b1a2e;
+      color: white;
+      overflow-x: hidden;
+    }
 
-  header {
-    text-align: center;
-    padding: 20px 0 10px 0;
-    border-bottom: 2px solid #2e3a55;
-  }
+    header {
+      text-align: center;
+      padding: 20px 10px;
+    }
 
-  header h1 {
-    font-size: 26px;
-    color: #fff;
-    margin-bottom: 8px;
-  }
+    header h1 {
+      font-size: 1.8em;
+      margin: 0;
+      color: white;
+      text-shadow: 0 0 10px rgba(255,255,255,0.4);
+    }
 
-  header .user-info {
-    font-size: 14px;
-    color: #fff;
-  }
+    .user-info {
+      font-size: 1em;
+      margin-top: 4px;
+    }
 
-  header .logout {
-    color: #89cfff;
-    text-decoration: underline;
-    cursor: pointer;
-  }
+    .user-info a {
+      color: #d0e0ff;
+      text-decoration: underline;
+      margin-left: 8px;
+      cursor: pointer;
+    }
 
-  .instructions {
-    background-color: rgba(255,255,255,0.05);
-    color: #fff;
-    padding: 10px 15px;
-    font-size: 14px;
-    text-align: left;
-    border-bottom: 1px solid #2e3a55;
-  }
+    .instructions {
+      background-color: rgba(255,255,255,0.05);
+      color: #eee;
+      padding: 10px 15px;
+      font-size: 0.95em;
+      text-align: left;
+    }
 
-  .calendar-controls {
-    text-align: center;
-    margin: 10px 0;
-  }
+    .calendar-container {
+      text-align: center;
+      margin-top: 10px;
+    }
 
-  .month-label {
-    display: inline-block;
-    background: linear-gradient(90deg, #ffd700, #fff3b0);
-    color: #000;
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-weight: bold;
-    animation: glowGold 2s infinite alternate;
-  }
+    .calendar-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
 
-  @keyframes glowGold {
-    from { box-shadow: 0 0 6px #ffd700; }
-    to { box-shadow: 0 0 14px #ffeb70; }
-  }
+    .month-nav {
+      background-color: #9eb7c4;
+      border: none;
+      color: #000;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-  .calendar-controls button {
-    background-color: #73b5ff;
-    border: none;
-    padding: 5px 10px;
-    margin: 0 5px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #fff;
-    font-weight: bold;
-    font-size: 13px;
-  }
+    .month-name {
+      font-size: 1.3em;
+      color: white;
+      animation: glowWhite 2s infinite alternate;
+      padding: 5px 12px;
+      border-radius: 8px;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
+    }
 
-  .calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-    max-width: 600px;
-    margin: 0 auto;
-    text-align: center;
-  }
+    @keyframes glowWhite {
+      0% { text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+      100% { text-shadow: 0 0 20px rgba(255,255,255,0.8); }
+    }
 
-  .day-header {
-    background-color: #1e3350;
-    padding: 6px 0;
-    font-weight: bold;
-  }
+    .calendar {
+      display: inline-grid;
+      grid-template-columns: repeat(7, 40px);
+      gap: 4px;
+      justify-content: center;
+    }
 
-  .day-header.sat { color: #73b5ff; }
-  .day-header.sun { color: #ffcc66; }
+    .day-name {
+      font-weight: bold;
+      font-size: 0.9em;
+    }
 
-  .day {
-    padding: 10px 0;
-    cursor: pointer;
-    background-color: #12233d;
-    border-radius: 6px;
-    transition: 0.3s;
-  }
+    .saturday { color: #a8d8ff; }
+    .sunday { color: #e3c37d; }
 
-  .day.sat { color: #73b5ff; }
-  .day.sun { color: #ffcc66; }
+    .day, .day-empty {
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
 
-  .day.selected {
-    color: #fff;
-    background: radial-gradient(circle, #ffffff, #cccccc);
-    box-shadow: 0 0 12px #ffffff;
-    animation: whiteGlow 1.5s infinite alternate;
-  }
+    .day:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
 
-  @keyframes whiteGlow {
-    from { box-shadow: 0 0 8px #fff; }
-    to { box-shadow: 0 0 20px #fff; }
-  }
+    .selected-day {
+      background: radial-gradient(circle at center, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+      box-shadow: 0 0 15px rgba(255,255,255,0.8);
+      color: white;
+      font-weight: bold;
+    }
 
-  .studio-grid {
-    display: flex;
-    justify-content: center;
-    max-width: 700px;
-    margin: 20px auto;
-  }
+    .studio-section {
+      margin-top: 25px;
+      text-align: center;
+    }
 
-  .studio-column {
-    flex: 1;
-    margin: 0 3px;
-    text-align: center;
-  }
+    .studios {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
 
-  .studio-header {
-    font-weight: bold;
-    color: black;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    padding: 6px 0;
-  }
+    .studio {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 6px;
+      font-weight: bold;
+      color: #000;
+      text-align: center;
+      line-height: 1.4em;
+      font-size: 0.9em;
+      min-width: 65px;
+    }
 
-  .studio-A { background-color: #ffd6e8; }
-  .studio-B { background-color: #d6ecff; }
-  .studio-C { background-color: #d6ffd6; }
-  .studio-EF { background-color: #d6e0ff; }
-  .studio-R { background-color: #fff9d6; }
+    .studio.A { background-color: #e7c1cb; }
+    .studio.B { background-color: #c2e4f2; }
+    .studio.C { background-color: #b9e2b9; }
+    .studio.EF { background-color: #aebfe6; }
+    .studio.R { background-color: #f3e6b3; }
 
-  .timeslot {
-    background-color: rgba(255,255,255,0.2);
-    border-radius: 4px;
-    margin: 2px 0;
-    padding: 4px 0;
-    font-size: 12px;
-    color: #fff;
-    cursor: pointer;
-  }
+    .time-slots {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
 
-  .timeslot.available:hover {
-    background-color: rgba(255,255,255,0.3);
-  }
+    .slot-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
 
-  .timeslot.booked {
-    background-color: rgba(255,0,0,0.4);
-    cursor: not-allowed;
-  }
+    .slot {
+      width: 80px;
+      height: 35px;
+      line-height: 35px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      cursor: pointer;
+      color: #000;
+      transition: all 0.2s ease;
+      background-color: rgba(255,255,255,0.65);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
 
-  .timeslot.selected {
-    background-color: gold;
-    color: black;
-    box-shadow: 0 0 6px gold;
-  }
+    .slot:hover {
+      transform: scale(1.05);
+      background-color: rgba(255,255,255,0.9);
+    }
 
-  .selection-summary {
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 15px;
-    background-color: rgba(255,255,255,0.1);
-    border-radius: 8px;
-  }
+    .slot.selected {
+      outline: 3px solid gold;
+      background-color: rgba(255,255,150,0.8);
+    }
 
-  .selection-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    font-size: 13px;
-    padding: 6px 10px;
-    color: #000;
-    font-weight: bold;
-  }
+    .selected-list {
+      text-align: center;
+      margin-top: 20px;
+    }
 
-  .selection-item button {
-    background: none;
-    border: none;
-    color: black;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-  }
+    .selected-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 6px;
+      margin: 5px auto;
+      padding: 8px 12px;
+      width: 90%;
+      color: black;
+      font-size: 0.9em;
+    }
 
-  .total {
-    text-align: right;
-    font-size: 16px;
-    color: #fff;
-    font-weight: bold;
-    margin-top: 8px;
-  }
+    .selected-item button {
+      background: none;
+      border: none;
+      color: black;
+      font-size: 0.8em;
+      cursor: pointer;
+    }
 
-  .proceed-btn {
-    display: block;
-    margin: 20px auto;
-    background-color: #ffd700;
-    color: black;
-    padding: 12px 40px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 18px;
-    cursor: pointer;
-    box-shadow: 0 0 10px #ffec80;
-  }
-</style>
+    .total {
+      font-weight: bold;
+      color: white;
+      margin-top: 8px;
+    }
+
+    .proceed-btn {
+      display: block;
+      margin: 25px auto;
+      padding: 12px 24px;
+      font-size: 1.1em;
+      color: white;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      animation: glowWhite 2s infinite alternate;
+    }
+
+    .proceed-btn:hover {
+      transform: scale(1.05);
+    }
+  </style>
 </head>
+
 <body>
-<header>
-  <h1>神戸芸術センター・スタジオWEB予約</h1>
-  <div class="user-info">
-    <span id="username">（ユーザー名）</span> 様 ｜ 
-    <span class="logout" onclick="logout()">ログアウト</span>
+  <header>
+    <h1>神戸芸術センター・スタジオWEB予約</h1>
+    <div class="user-info">
+      <span id="userName">山田太郎</span> 様
+      <a id="logoutLink">ログアウト</a>
+    </div>
+  </header>
+
+  <div class="instructions">
+    カレンダーから日付を選び、各スタジオの利用時間を選択してください。選択したご利用内容がページ下部に表示されます。全ての選択が終わったら「予約へ進む」をクリックしてください。予約は6ヶ月先の月末まで受け付けしています。毎月1日の午前9時に、その月から6ヶ月先の予約が可能になります。
   </div>
-</header>
 
-<div class="instructions">
-  カレンダーから日付を選び、各スタジオの利用時間を選択してください。選択したご利用内容がページ下部に表示されます。全ての選択が終わったら「予約へ進む」をクリックしてください。予約は6ヶ月先の月末まで受け付けしています。毎月1日の午前9時に、その月から6ヶ月先の予約が可能になります。
-</div>
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <button class="month-nav" id="prevMonth">前の月</button>
+      <div class="month-name" id="monthYear">2025年11月</div>
+      <button class="month-nav" id="nextMonth">次の月</button>
+    </div>
 
-<div class="calendar-controls">
-  <button id="prevMonth">前の月</button>
-  <span class="month-label" id="monthLabel">2025年11月</span>
-  <button id="nextMonth">次の月</button>
-</div>
+    <div class="calendar">
+      <div class="day-name">月</div>
+      <div class="day-name">火</div>
+      <div class="day-name">水</div>
+      <div class="day-name">木</div>
+      <div class="day-name">金</div>
+      <div class="day-name saturday">土</div>
+      <div class="day-name sunday">日</div>
 
-<div class="calendar" id="calendar"></div>
+      <!-- サンプル日付 -->
+      <div class="day">1</div>
+      <div class="day">2</div>
+      <div class="day saturday">3</div>
+      <div class="day sunday selected-day">4</div>
+      <div class="day">5</div>
+    </div>
+  </div>
 
-<div class="studio-grid" id="studioGrid"></div>
+  <div class="studio-section">
+    <div class="studios">
+      <div class="studio A">A<br>￥1100</div>
+      <div class="studio B">B<br>￥1100</div>
+      <div class="studio C">C<br>￥1980</div>
+      <div class="studio EF">EF<br>￥2310</div>
+      <div class="studio R">R<br>￥2090</div>
+    </div>
 
-<div class="selection-summary" id="selectionSummary">
-  <div class="total">合計：¥0（税込）</div>
-</div>
-
-<button class="proceed-btn">予約へ進む</button>
-
-<script>
-const username = "田中太郎"; 
-document.getElementById("username").innerText = username;
-
-function logout() { alert("ログアウトしました"); }
-
-const monthLabel = document.getElementById("monthLabel");
-const calendar = document.getElementById("calendar");
-const studioGrid = document.getElementById("studioGrid");
-const selectionSummary = document.getElementById("selectionSummary");
-
-let current = new Date(2025, 10, 1);
-let selectedDate = null;
-let selections = [];
-
-const studios = ["A","B","C","EF","R"];
-const studioRates = { A:1100, B:1100, C:1980, EF:2310, R:2090 };
-const studioColors = { A:"#ffd6e8", B:"#d6ecff", C:"#d6ffd6", EF:"#d6e0ff", R:"#fff9d6" };
-
-function renderCalendar(){
-  calendar.innerHTML="";
-  const headers=["月","火","水","木","金","土","日"];
-  headers.forEach((d,i)=>{
-    const h=document.createElement("div");
-    h.className="day-header"+(i===5?" sat":i===6?" sun":"");
-    h.textContent=d;
-    calendar.appendChild(h);
-  });
-
-  const y=current.getFullYear(), m=current.getMonth();
-  monthLabel.textContent=`${y}年${m+1}月`;
-  const first=new Date(y,m,1);
-  const start=(first.getDay()+6)%7;
-  const daysInMonth=new Date(y,m+1,0).getDate();
-
-  for(let i=0;i<start;i++) calendar.appendChild(document.createElement("div"));
-  for(let d=1; d<=daysInMonth; d++){
-    const date=new Date(y,m,d);
-    const div=document.createElement("div");
-    div.textContent=d;
-    div.className="day";
-    if(date.getDay()===6) div.classList.add("sat");
-    if(date.getDay()===0) div.classList.add("sun");
-    div.onclick=()=>selectDate(date,div);
-    if(selectedDate && date.toDateString()===selectedDate.toDateString()) div.classList.add("selected");
-    calendar.appendChild(div);
-  }
-}
-
-function selectDate(date, el){
-  selectedDate=date;
-  document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected"));
-  el.classList.add("selected");
-  renderStudios();
-}
-
-function renderStudios(){
-  studioGrid.innerHTML="";
-  const times=Array.from({length:15},(_,i)=>`${7+i}:00〜${8+i}:00`);
-  studios.forEach(studio=>{
-    const col=document.createElement("div");
-    col.className="studio-column";
-    const head=document.createElement("div");
-    head.className=`studio-header studio-${studio}`;
-    head.innerHTML=`${studio}<br>¥${studioRates[studio]}`;
-    col.appendChild(head);
-
-    times.forEach(t=>{
-      const slot=document.createElement("div");
-      slot.className="timeslot available";
-      slot.innerHTML=`${t}<br>〇`;
-      slot.style.backgroundColor=studioColors[studio].replace(")",",0.9)").replace("rgb","rgba");
-      slot.onclick=()=>toggleSelect(studio,t);
-      if(selections.find(s=>s.date===selectedDate?.toDateString()&&s.time===t&&s.studio===studio)) slot.classList.add("selected");
-      col.appendChild(slot);
-    });
-    studioGrid.appendChild(col);
-  });
-}
-
-function toggleSelect(studio,time){
-  if(!selectedDate)return;
-  const key={date:selectedDate.toDateString(),studio,time};
-  const index=selections.findIndex(s=>s.date===key.date&&s.studio===key.studio&&s.time===key.time);
-  if(index>=0) selections.splice(index,1); else selections.push(key);
-  renderSelections();
-  renderStudios();
-}
-
-function renderSelections(){
-  selectionSummary.innerHTML="";
-  selections.forEach(sel=>{
-    const d=new Date(sel.date);
-    const jpDay=["日","月","火","水","木","金","土"][d.getDay()];
-    const div=document.createElement("div");
-    div.className="selection-item";
-    div.style.backgroundColor=studioColors[sel.studio];
-    div.innerHTML=`
-      <div>
-        ${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}（${jpDay}）<br>
-        ${sel.time}<br>${sel.studio}　¥${studioRates[sel.studio]}
+    <div class="time-slots">
+      <div class="slot-column">
+        <div class="slot">7:00-8:00<br>〇</div>
+        <div class="slot">8:00-9:00<br>〇</div>
+        <div class="slot">9:00-10:00<br>×</div>
       </div>
-      <button onclick="removeSelection('${sel.date}','${sel.studio}','${sel.time}')">削除</button>`;
-    selectionSummary.appendChild(div);
-  });
-  const total=selections.reduce((sum,s)=>sum+studioRates[s.studio],0);
-  const totalDiv=document.createElement("div");
-  totalDiv.className="total";
-  totalDiv.textContent=`合計：¥${total.toLocaleString()}（税込）`;
-  selectionSummary.appendChild(totalDiv);
-}
+      <div class="slot-column">
+        <div class="slot">7:00-8:00<br>〇</div>
+        <div class="slot">8:00-9:00<br>×</div>
+        <div class="slot">9:00-10:00<br>〇</div>
+      </div>
+      <div class="slot-column">
+        <div class="slot">7:00-8:00<br>×</div>
+        <div class="slot">8:00-9:00<br>〇</div>
+        <div class="slot">9:00-10:00<br>〇</div>
+      </div>
+      <div class="slot-column">
+        <div class="slot">7:00-8:00<br>〇</div>
+        <div class="slot">8:00-9:00<br>〇</div>
+        <div class="slot">9:00-10:00<br>〇</div>
+      </div>
+      <div class="slot-column">
+        <div class="slot">7:00-8:00<br>〇</div>
+        <div class="slot">8:00-9:00<br>〇</div>
+        <div class="slot">9:00-10:00<br>〇</div>
+      </div>
+    </div>
 
-function removeSelection(date,studio,time){
-  selections=selections.filter(s=>!(s.date===date&&s.studio===studio&&s.time===time));
-  renderSelections();
-  renderStudios();
-}
+    <div class="selected-list">
+      <div class="selected-item" style="background-color:#c2e4f2">
+        2025-11-22（土）15時〜16時<br>スタジオB ￥1100
+        <button>削除</button>
+      </div>
+      <div class="selected-item" style="background-color:#f3e6b3">
+        2025-11-23（日）9時〜10時<br>スタジオR ￥2090
+        <button>削除</button>
+      </div>
+      <div class="total">合計：￥3190（税込）</div>
+    </div>
+  </div>
 
-document.getElementById("prevMonth").onclick=()=>{ current.setMonth(current.getMonth()-1); renderCalendar(); };
-document.getElementById("nextMonth").onclick=()=>{ current.setMonth(current.getMonth()+1); renderCalendar(); };
-
-renderCalendar();
-</script>
+  <button class="proceed-btn">予約へ進む</button>
 </body>
 </html>
