@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>神戸芸術センター・スタジオWEB予約</title>
 <style>
   body {
@@ -129,7 +129,6 @@
     margin-bottom: 10px;
   }
 
-  /* 🎨 スタジオカラー更新 */
   .studio {
     flex: 1;
     padding: 8px 0;
@@ -148,75 +147,7 @@
   .studio.EF { background-color: #7988c7; }
   .studio.R { background-color: #d9c46e; }
 
-  .time-slots {
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    margin-bottom: 20px;
-  }
-
-  .slot-column {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .slot {
-    width: 80px;
-    height: 35px;
-    line-height: 35px;
-    border-radius: 6px;
-    font-size: 0.85em;
-    cursor: pointer;
-    color: #000;
-    transition: all 0.2s ease;
-    background-color: rgba(255,255,255,0.65);
-    border: 1px solid rgba(0,0,0,0.05);
-  }
-
-  .slot:hover {
-    transform: scale(1.05);
-    background-color: rgba(255,255,255,0.9);
-  }
-
-  .slot.selected {
-    outline: 3px solid gold;
-    background-color: rgba(255,255,150,0.8);
-  }
-
-  .selected-list {
-    text-align: center;
-    margin-top: 20px;
-  }
-
-  .selected-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 6px;
-    margin: 5px auto;
-    padding: 8px 12px;
-    width: 90%;
-    color: black;
-    font-size: 0.9em;
-  }
-
-  .selected-item button {
-    background: none;
-    border: none;
-    color: black;
-    font-size: 0.8em;
-    cursor: pointer;
-  }
-
-  .total {
-    font-weight: bold;
-    color: white;
-    margin-top: 8px;
-  }
-
-  /* ✨ 発光ボタン：白文字・薄発光（ホワイト） */
+  /* 発光ボタン */
   .proceed-btn {
     display: block;
     margin: 25px auto;
@@ -258,23 +189,11 @@
   <div class="calendar-container">
     <div class="calendar-header">
       <button class="month-nav" id="prevMonth">前の月</button>
-      <div class="month-name" id="monthYear">2025年11月</div>
+      <div class="month-name" id="monthYear"></div>
       <button class="month-nav" id="nextMonth">次の月</button>
     </div>
-
-    <div class="calendar">
-      <div class="day-name">月</div>
-      <div class="day-name">火</div>
-      <div class="day-name">水</div>
-      <div class="day-name">木</div>
-      <div class="day-name">金</div>
-      <div class="day-name saturday">土</div>
-      <div class="day-name sunday">日</div>
-      <div class="day">1</div>
-      <div class="day">2</div>
-      <div class="day saturday">3</div>
-      <div class="day sunday selected-day">4</div>
-      <div class="day">5</div>
+    <div class="calendar" id="calendar">
+      <!-- カレンダーが自動生成されます -->
     </div>
   </div>
 
@@ -289,5 +208,85 @@
   </div>
 
   <button class="proceed-btn">予約へ進む</button>
+
+  <script>
+    const calendarEl = document.getElementById('calendar');
+    const monthYearEl = document.getElementById('monthYear');
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+
+    let today = new Date();
+    let currentYear = today.getFullYear();
+    let currentMonth = today.getMonth(); // 0=Jan
+    let selectedDate = null;
+
+    const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 1);
+
+    function renderCalendar(year, month) {
+      calendarEl.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDay = (firstDay.getDay() + 6) % 7; // 月曜始まり
+
+      monthYearEl.textContent = `${year}年${month + 1}月`;
+
+      const weekdays = ['月','火','水','木','金','土','日'];
+      weekdays.forEach((w, i) => {
+        const div = document.createElement('div');
+        div.classList.add('day-name');
+        if (i === 5) div.classList.add('saturday');
+        if (i === 6) div.classList.add('sunday');
+        div.textContent = w;
+        calendarEl.appendChild(div);
+      });
+
+      for (let i = 0; i < startDay; i++) {
+        const empty = document.createElement('div');
+        empty.classList.add('day-empty');
+        calendarEl.appendChild(empty);
+      }
+
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const dateEl = document.createElement('div');
+        dateEl.classList.add('day');
+        const dayOfWeek = (startDay + d - 1) % 7;
+        if (dayOfWeek === 5) dateEl.classList.add('saturday');
+        if (dayOfWeek === 6) dateEl.classList.add('sunday');
+        dateEl.textContent = d;
+
+        const thisDate = new Date(year, month, d);
+        if (selectedDate && thisDate.toDateString() === selectedDate.toDateString()) {
+          dateEl.classList.add('selected-day');
+        }
+
+        dateEl.addEventListener('click', () => {
+          selectedDate = thisDate;
+          renderCalendar(year, month);
+        });
+
+        calendarEl.appendChild(dateEl);
+      }
+    }
+
+    prevBtn.addEventListener('click', () => {
+      const newDate = new Date(currentYear, currentMonth - 1);
+      if (newDate < minDate) return;
+      currentYear = newDate.getFullYear();
+      currentMonth = newDate.getMonth();
+      renderCalendar(currentYear, currentMonth);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      const newDate = new Date(currentYear, currentMonth + 1);
+      if (newDate > maxDate) return;
+      currentYear = newDate.getFullYear();
+      currentMonth = newDate.getMonth();
+      renderCalendar(currentYear, currentMonth);
+    });
+
+    renderCalendar(currentYear, currentMonth);
+  </script>
 </body>
 </html>
