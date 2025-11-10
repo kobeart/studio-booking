@@ -267,51 +267,113 @@ const calendar = document.getElementById("calendar");
 const studioGrid = document.getElementById("studioGrid");
 const selectionSummary = document.getElementById("selectionSummary");
 
-let current = new Date(2025, 10, 1);
-let selectedDate = null;
+let currentDate = new Date();
+let selectedDate = new Date();
 let selections = [];
 
-const studios = ["A","B","C","EF","R"];
+const studios = ["A", "B", "C", "EF", "R"];
 const studioRates = { A:1100, B:1100, C:1980, EF:2310, R:2090 };
 const studioColors = { A:"#cc7b9b", B:"#7aa6c7", C:"#7fc980", EF:"#7988c7", R:"#d9c46e" };
 
-function renderCalendar(){
-  calendar.innerHTML="";
-  const headers=["月","火","水","木","金","土","日"];
-  headers.forEach((d,i)=>{
-    const h=document.createElement("div");
-    h.className="day-header"+(i===5?" sat":i===6?" sun":"");
-    h.textContent=d;
+// 🔹 カレンダーの制御パラメータ
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+let displayYear = today.getFullYear();
+let displayMonth = today.getMonth();
+let minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+let maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 0);
+
+function renderCalendar(year = displayYear, month = displayMonth) {
+  calendar.innerHTML = "";
+
+  // 曜日ヘッダー
+  const headers = ["月","火","水","木","金","土","日"];
+  headers.forEach((d, i) => {
+    const h = document.createElement("div");
+    h.className = "day-header" + (i === 5 ? " sat" : i === 6 ? " sun" : "");
+    h.textContent = d;
     calendar.appendChild(h);
   });
 
-  const y=current.getFullYear(), m=current.getMonth();
-  monthLabel.textContent=`${y}年${m+1}月`;
-  const first=new Date(y,m,1);
-  const start=(first.getDay()+6)%7;
-  const daysInMonth=new Date(y,m+1,0).getDate();
+  // 日付生成
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const start = (firstDay.getDay() + 6) % 7; // 月曜始まり
+  monthLabel.textContent = `${year}年${month + 1}月`;
 
-  for(let i=0;i<start;i++) calendar.appendChild(document.createElement("div"));
-  for(let d=1; d<=daysInMonth; d++){
-    const date=new Date(y,m,d);
-    const div=document.createElement("div");
-    div.textContent=d;
-    div.className="day";
-    if(date.getDay()===6) div.classList.add("sat");
-    if(date.getDay()===0) div.classList.add("sun");
-    div.onclick=()=>selectDate(date,div);
-    if(selectedDate && date.toDateString()===selectedDate.toDateString()) div.classList.add("selected");
+  for (let i = 0; i < start; i++) calendar.appendChild(document.createElement("div"));
+
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const date = new Date(year, month, d);
+    const div = document.createElement("div");
+    div.textContent = d;
+    div.className = "day";
+
+    if (date.getDay() === 6) div.classList.add("sat");
+    if (date.getDay() === 0) div.classList.add("sun");
+
+    // 今日より前は非アクティブ
+    if (date < today) {
+      div.style.opacity = "0.3";
+      div.style.pointerEvents = "none";
+    } else {
+      div.addEventListener("click", () => {
+        selectedDate = date;
+        renderCalendar(year, month);
+        renderStudios();
+      });
+    }
+
+    // 今日
+    if (date.getTime() === today.getTime()) {
+      div.classList.add("today");
+    }
+
+    // 選択中
+    if (
+      date.getFullYear() === selectedDate.getFullYear() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getDate() === selectedDate.getDate()
+    ) {
+      div.classList.add("selected");
+    }
+
     calendar.appendChild(div);
   }
+
+  // ボタン制御
+  document.getElementById("prevMonth").disabled = new Date(year, month) <= minDate;
+  document.getElementById("nextMonth").disabled = new Date(year, month, 1) >= maxDate;
 }
 
-function selectDate(date, el){
-  selectedDate=date;
-  document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected"));
-  el.classList.add("selected");
+document.getElementById("prevMonth").onclick = () => {
+  if (displayMonth === 0) {
+    displayMonth = 11;
+    displayYear--;
+  } else {
+    displayMonth--;
+  }
+  renderCalendar(displayYear, displayMonth);
+};
+
+document.getElementById("nextMonth").onclick = () => {
+  if (displayMonth === 11) {
+    displayMonth = 0;
+    displayYear++;
+  } else {
+    displayMonth++;
+  }
+  renderCalendar(displayYear, displayMonth);
+};
+
+// 🔹 初期表示（今日を選択）
+window.addEventListener("load", () => {
+  selectedDate = new Date(today);
+  renderCalendar();
   renderStudios();
-}
+});
 
+// 🔹 スタジオ一覧（元のまま利用）
 function renderStudios(){
   studioGrid.innerHTML="";
   const times=Array.from({length:15},(_,i)=>`${7+i}:00〜${8+i}:00`);
@@ -336,6 +398,7 @@ function renderStudios(){
   });
 }
 
+// 🔹 選択・削除機能（元のまま）
 function toggleSelect(studio,time){
   if(!selectedDate)return;
   const key={date:selectedDate.toDateString(),studio,time};
@@ -373,14 +436,10 @@ function removeSelection(date,studio,time){
   renderSelections();
   renderStudios();
 }
-
-document.getElementById("prevMonth").onclick=()=>{ current.setMonth(current.getMonth()-1); renderCalendar(); };
-document.getElementById("nextMonth").onclick=()=>{ current.setMonth(current.getMonth()+1); renderCalendar(); };
-
-renderCalendar();
 </script>
 </body>
 </html>
+
 
 
 
