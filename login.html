@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ログイン | 神戸芸術センター・スタジオWEB予約</title>
+  <style>
+    body {
+      background-color: #0a1a2f;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    form {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: 30px auto;
+      text-align: left;
+    }
+    label { display: block; margin: 10px 0 5px; }
+    input {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+    }
+    button {
+      background: #7aa6c7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+    .error { color: #ff8080; margin-top: 10px; }
+    a { color: #9eb7c4; }
+  </style>
+</head>
+<body>
+
+  <h1>ログイン</h1>
+  <form id="loginForm">
+    <label>メールアドレス</label>
+    <input type="email" id="email" required>
+
+    <label>パスワード</label>
+    <input type="password" id="password" required>
+
+    <button type="submit">ログイン</button>
+    <p id="errorMsg" class="error"></p>
+  </form>
+
+  <p>新規登録は <a href="register.html">こちら</a></p>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+    authDomain: "studio-rental-180df.firebaseapp.com",
+    projectId: "studio-rental-180df",
+    storageBucket: "studio-rental-180df.firebasestorage.app",
+    messagingSenderId: "485178815055",
+    appId: "1:485178815055:web:f91792229f8c359cf1303a",
+    measurementId: "G-EF147DP6ZB"
+  };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const loginForm = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        window.location.href = "index.html";
+      } catch (error) {
+        errorMsg.textContent = "メールアドレスまたはパスワードが正しくありません。";
+      }
+    });
+  </script>
+</body>
+</html>
