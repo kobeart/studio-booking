@@ -3,150 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>会員登録・ログイン | 神戸芸術センター</title>
-  <script type="module">
-    // Firebase SDK読み込み
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
-      authDomain: "studio-rental-180df.firebaseapp.com",
-      projectId: "studio-rental-180df",
-      storageBucket: "studio-rental-180df.firebasestorage.app",
-      messagingSenderId: "485178815055",
-      appId: "1:485178815055:web:f91792229f8c359cf1303a",
-      measurementId: "G-EF147DP6ZB"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // ログイン状態の確認
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.location.href = "index.html";
-      }
-    });
-
-    // 登録処理
-    window.register = async () => {
-      const email = document.getElementById("reg-email").value;
-      const password = document.getElementById("reg-password").value;
-      const errorMsg = document.getElementById("reg-error");
-      errorMsg.textContent = "";
-
-      if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
-        errorMsg.textContent = "パスワードは8文字以上で英数字を含めてください。";
-        return;
-      }
-
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert("会員登録が完了しました。");
-        window.location.href = "index.html";
-      } catch (error) {
-        errorMsg.textContent = "登録に失敗しました：" + error.message;
-      }
-    };
-
-    // ログイン処理
-    window.login = async () => {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-      const errorMsg = document.getElementById("login-error");
-      errorMsg.textContent = "";
-
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = "index.html";
-      } catch (error) {
-        errorMsg.textContent = "ログインに失敗しました：" + error.message;
-      }
-    };
-  </script>
-
+  <title>新規登録 | 神戸芸術センター・スタジオWEB予約</title>
   <style>
     body {
+      font-family: "Helvetica Neue", Arial, sans-serif;
       background-color: #0a1a2f;
-      color: white;
-      font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
+      color: #fff;
       margin: 0;
-      padding-top: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    h1 {
-      margin-bottom: 1.5rem;
-      color: #7ec8ff;
+    .register-container {
+      background-color: rgba(255,255,255,0.08);
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+      width: 360px;
     }
-    .container {
-      background: rgba(255,255,255,0.05);
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.2);
-      width: 90%;
-      max-width: 400px;
-      margin-bottom: 2rem;
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
     }
-    input {
+    label {
+      display: block;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    input, select {
       width: 100%;
-      padding: 0.6rem;
-      margin-top: 0.4rem;
-      margin-bottom: 0.8rem;
+      padding: 8px;
+      margin-top: 5px;
       border: none;
       border-radius: 6px;
-      background: #1a2b44;
-      color: white;
+      font-size: 14px;
     }
     button {
       width: 100%;
-      padding: 0.8rem;
-      background-color: #0078ff;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.25), rgba(255,255,255,0.05));
       color: white;
       border: none;
       border-radius: 8px;
+      padding: 10px;
+      margin-top: 20px;
+      font-size: 16px;
       cursor: pointer;
-      font-size: 1rem;
+      box-shadow: 0 0 8px rgba(255,255,255,0.2);
+      transition: 0.3s;
     }
     button:hover {
-      background-color: #3399ff;
+      box-shadow: 0 0 14px rgba(255,255,255,0.5);
+    }
+    .login-link {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .login-link a {
+      color: #89cfff;
+      text-decoration: underline;
     }
     .error {
-      color: #ff7b7b;
-      font-size: 0.9rem;
-      min-height: 1.2em;
-    }
-    .switch {
+      color: #ff8080;
+      font-size: 13px;
+      margin-top: 10px;
       text-align: center;
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-    a {
-      color: #7ec8ff;
     }
   </style>
 </head>
 <body>
-  <h1>会員登録・ログイン</h1>
 
-  <div class="container">
-    <h2>新規会員登録</h2>
-    <input type="email" id="reg-email" placeholder="メールアドレス">
-    <input type="password" id="reg-password" placeholder="パスワード（8文字以上・英数字混在）">
-    <div id="reg-error" class="error"></div>
-    <button onclick="register()">登録する</button>
+  <div class="register-container">
+    <h2>神戸芸術センター・スタジオWEB予約 新規登録</h2>
+    <form id="registerForm">
+      <label>氏名 *</label>
+      <input type="text" id="name" required>
+
+      <label>団体名（任意）</label>
+      <input type="text" id="organization">
+
+      <label>住所 *</label>
+      <input type="text" id="address" required>
+
+      <label>電話番号 *</label>
+      <input type="tel" id="phone" required>
+
+      <label>利用内容のジャンル *</label>
+      <input type="text" id="genre" required>
+
+      <label>メールアドレス *</label>
+      <input type="email" id="email" required>
+
+      <label>パスワード *</label>
+      <input type="password" id="password" minlength="8" required placeholder="英数字8文字以上">
+
+      <button type="submit">登録</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+    <div class="login-link">
+      すでに登録済みの方は <a href="login.html">ログイン</a>
+    </div>
   </div>
 
-  <div class="container">
-    <h2>ログイン</h2>
-    <input type="email" id="login-email" placeholder="メールアドレス">
-    <input type="password" id="login-password" placeholder="パスワード">
-    <div id="login-error" class="error"></div>
-    <button onclick="login()">ログイン</button>
-  </div>
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+    authDomain: "studio-rental-180df.firebaseapp.com",
+    projectId: "studio-rental-180df",
+    storageBucket: "studio-rental-180df.firebasestorage.app",
+    messagingSenderId: "485178815055",
+    appId: "1:485178815055:web:f91792229f8c359cf1303a",
+    measurementId: "G-EF147DP6ZB"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+
+    const registerForm = document.getElementById("registerForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const organization = document.getElementById("organization").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const genre = document.getElementById("genre").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      // パスワードバリデーション
+      if (!/(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}/.test(password)) {
+        errorMsg.textContent = "パスワードは英数字8文字以上で、英字と数字を含めてください。";
+        return;
+      }
+
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        await db.collection("users").doc(user.uid).set({
+          name, organization, address, phone, genre, email, createdAt: new Date()
+        });
+        alert("登録が完了しました！");
+        window.location.href = "index.html";
+      } catch (error) {
+        errorMsg.textContent = error.message;
+      }
+    });
+  </script>
 </body>
 </html>
