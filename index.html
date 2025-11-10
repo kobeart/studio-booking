@@ -116,16 +116,22 @@
   .day.sun { color: #ffcc66; }
 
   .day.selected {
-    color: #fff;
-    background: radial-gradient(circle, #ffffff, #cccccc);
-    box-shadow: 0 0 12px #ffffff;
-    animation: whiteGlow 1.5s infinite alternate;
-  }
+  color: inherit; /* ← 土日カラーを保持 */
+  background: #12233d; /* 通常背景を維持 */
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 0 8px rgba(255,255,255,0.5), 0 0 15px rgba(255,255,255,0.3);
+  animation: whiteGlow 2s infinite alternate;
+  border-radius: 6px;
+}
 
-  @keyframes whiteGlow {
-    from { box-shadow: 0 0 8px #fff; }
-    to { box-shadow: 0 0 20px #fff; }
+@keyframes whiteGlow {
+  from {
+    box-shadow: 0 0 6px rgba(255,255,255,0.3), 0 0 12px rgba(255,255,255,0.2);
   }
+  to {
+    box-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 18px rgba(255,255,255,0.4);
+  }
+}
 
   .studio-grid {
     display: flex;
@@ -443,6 +449,7 @@ function removeSelection(date,studio,time){
 </script>
 </body>
 </html>
+
 
 
 
