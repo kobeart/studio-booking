@@ -106,10 +106,11 @@
     </div>
   </div>
 
- <script type="module">
+<!-- Firebase SDK -->
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
@@ -121,42 +122,54 @@
     measurementId: "G-EF147DP6ZB"
   };
 
+  // Firebase 初期化
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  // 登録処理
+  const registerForm = document.getElementById("registerForm");
+  const errorMsg = document.getElementById("errorMsg");
 
-    const registerForm = document.getElementById("registerForm");
-    const errorMsg = document.getElementById("errorMsg");
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value.trim();
+    const organization = document.getElementById("organization").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const genre = document.getElementById("genre").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-    registerForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value.trim();
-      const organization = document.getElementById("organization").value.trim();
-      const address = document.getElementById("address").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const genre = document.getElementById("genre").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+    // 🔐 パスワードバリデーション
+    if (!/(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}/.test(password)) {
+      errorMsg.textContent = "パスワードは英数字8文字以上で、英字と数字を含めてください。";
+      return;
+    }
 
-      // パスワードバリデーション
-      if (!/(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}/.test(password)) {
-        errorMsg.textContent = "パスワードは英数字8文字以上で、英字と数字を含めてください。";
-        return;
-      }
+    try {
+      // ✅ 新規登録
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        await db.collection("users").doc(user.uid).set({
-          name, organization, address, phone, genre, email, createdAt: new Date()
-        });
-        alert("登録が完了しました！");
-        window.location.href = "index.html";
-      } catch (error) {
-        errorMsg.textContent = error.message;
-      }
-    });
-  </script>
+      // ✅ Firestore にユーザーデータ保存
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        organization,
+        address,
+        phone,
+        genre,
+        email,
+        createdAt: new Date(),
+      });
+
+      alert("登録が完了しました！");
+      window.location.href = "index.html";
+    } catch (error) {
+      errorMsg.textContent = "エラー：" + error.message;
+    }
+  });
+</script>
+
 </body>
 </html>
