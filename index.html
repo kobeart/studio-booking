@@ -36,14 +36,20 @@
     cursor: pointer;
   }
 
-  .instructions {
-    background-color: rgba(255,255,255,0.05);
-    color: #fff;
-    padding: 10px 15px;
-    font-size: 14px;
-    text-align: left;
-    border-bottom: 1px solid #2e3a55;
-  }
+.instructions {
+  background-color: rgba(255,255,255,0.05);
+  color: #fff;
+  padding: 10px 15px;
+  font-size: 14px;
+  text-align: left;
+  border-bottom: 1px solid #2e3a55;
+
+  /* 🔽 ここを追加（横幅と中央寄せの調整） */
+  max-width: 380px;   /* カレンダーやスタジオ列と同じ幅に調整 */
+  margin: 0 auto;     /* 中央寄せ */
+  border-radius: 6px; /* 少し角丸で柔らかく */
+}
+
 
   .calendar-controls {
     text-align: center;
@@ -375,6 +381,7 @@ renderCalendar();
 </script>
 </body>
 </html>
+
 
 
 
