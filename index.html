@@ -56,14 +56,18 @@
     margin: 10px 0;
   }
 
-  .monthLabel {
-    font-size: 1.3em;
-    color: white;
-    animation: glowWhite 2s infinite alternate;
-    padding: 5px 12px;
-    border-radius: 8px;
-    background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
-  }
+.monthLabel {
+  font-size: 1.3em;
+  color: white;
+  animation: glowWhite 2s infinite alternate;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
+  display: inline-block;
+  min-width: 130px; /* ← 月による幅の変動を防ぐ */
+  text-align: center; /* ← 中央揃えで整える */
+  box-sizing: border-box; /* ← パディングを含めた幅調整 */
+}
 
   @keyframes glowWhite {
     0% { text-shadow: 0 0 8px rgba(255,255,255,0.3); }
@@ -453,6 +457,7 @@ function removeSelection(date,studio,time){
 </script>
 </body>
 </html>
+
 
 
 
