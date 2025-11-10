@@ -286,53 +286,10 @@
 <button class="proceed-btn">予約へ進む</button>
 
 <script>
-<script type="module">
-/* Firebase設定 */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+const username = "田中太郎"; 
+document.getElementById("username").innerText = username;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
-  authDomain: "studio-rental-180df.firebaseapp.com",
-  projectId: "studio-rental-180df",
-  storageBucket: "studio-rental-180df.firebasestorage.app",
-  messagingSenderId: "485178815055",
-  appId: "1:485178815055:web:f91792229f8c359cf1303a",
-  measurementId: "G-EF147DP6ZB"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-/* ▼ ユーザー名表示とログアウト */
-const usernameSpan = document.getElementById("username");
-
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    try {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        usernameSpan.innerText = userDoc.data().name + " 様 ｜ ";
-      } else {
-        usernameSpan.innerText = user.email + " 様 ｜ ";
-      }
-    } catch (e) {
-      console.error("ユーザー情報取得エラー:", e);
-      usernameSpan.innerText = user.email + " 様 ｜ ";
-    }
-  } else {
-    // 未ログインなら登録ページへ
-    window.location.href = "register.html";
-  }
-});
-
-window.logout = async function () {
-  await signOut(auth);
-  alert("ログアウトしました");
-  window.location.href = "register.html";
-};
+function logout() { alert("ログアウトしました"); }
 
 const monthLabel = document.getElementById("monthLabel");
 const calendar = document.getElementById("calendar");
