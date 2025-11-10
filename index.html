@@ -115,21 +115,25 @@
   .day.sat { color: #73b5ff; }
   .day.sun { color: #ffcc66; }
 
-  .day.selected {
-  color: inherit; /* ← 土日カラーを保持 */
+.day.selected {
   background: #12233d; /* 通常背景を維持 */
   border: 1px solid rgba(255,255,255,0.6);
-  box-shadow: 0 0 8px rgba(255,255,255,0.5), 0 0 15px rgba(255,255,255,0.3);
+  box-shadow: 0 0 8px rgba(255,255,255,0.4), 0 0 15px rgba(255,255,255,0.2);
   animation: whiteGlow 2s infinite alternate;
   border-radius: 6px;
 }
 
+/* 土曜・日曜の文字色を保持するため、強制上書き */
+.day.sat.selected { color: #73b5ff !important; }
+.day.sun.selected { color: #ffcc66 !important; }
+.day:not(.sat):not(.sun).selected { color: #fff !important; }
+
 @keyframes whiteGlow {
   from {
-    box-shadow: 0 0 6px rgba(255,255,255,0.3), 0 0 12px rgba(255,255,255,0.2);
+    box-shadow: 0 0 6px rgba(255,255,255,0.3), 0 0 12px rgba(255,255,255,0.15);
   }
   to {
-    box-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 18px rgba(255,255,255,0.4);
+    box-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.3);
   }
 }
 
@@ -449,6 +453,7 @@ function removeSelection(date,studio,time){
 </script>
 </body>
 </html>
+
 
 
 
