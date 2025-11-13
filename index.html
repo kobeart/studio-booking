@@ -125,6 +125,23 @@
     cursor: not-allowed;
   }
 
+  .timeslot.selected {
+  background: radial-gradient(circle at center, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
+  color: black;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 15px rgba(255,255,255,0.5);
+  animation: slotGlow 1.8s infinite alternate;
+}
+
+/* 光のアニメーション */
+@keyframes slotGlow {
+  from {
+    box-shadow: 0 0 6px rgba(255,255,255,0.5), 0 0 10px rgba(255,255,255,0.3);
+  }
+  to {
+    box-shadow: 0 0 15px rgba(255,255,255,0.9), 0 0 25px rgba(255,255,255,0.6);
+  }
+}
+  
   .selection-summary {
     max-width: 600px;
     margin: 20px auto;
@@ -431,4 +448,5 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
