@@ -669,6 +669,17 @@ document.getElementById("confirmBooking").addEventListener("click", async () => 
       });
     }
 
+await emailjs.send("service_xxxxxx", "template_ab12cd3", {
+  user_name: user.displayName || user.email,
+  user_email: user.email,
+  date: slot.date,
+  studio: slot.studio,
+  time: slot.time,
+  price: studioRates[slot.studio],
+  payment: payment,   // 支払い方法
+  remarks: remarks     // 備考欄の内容
+});
+
     alert("予約が完了しました！");
     document.getElementById("confirmModal").style.display = "none";
     window.location.reload(); // ページを再読み込みして✕表示を更新
