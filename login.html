@@ -55,37 +55,37 @@
 
   <p>新規登録は <a href="register.html">こちら</a></p>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-  <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
-    authDomain: "studio-rental-180df.firebaseapp.com",
-    projectId: "studio-rental-180df",
-    storageBucket: "studio-rental-180df.firebasestorage.app",
-    messagingSenderId: "485178815055",
-    appId: "1:485178815055:web:f91792229f8c359cf1303a",
-    measurementId: "G-EF147DP6ZB"
-  };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+const firebaseConfig = {
+  apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+  authDomain: "studio-rental-180df.firebaseapp.com",
+  projectId: "studio-rental-180df",
+  storageBucket: "studio-rental-180df.firebasestorage.app",
+  messagingSenderId: "485178815055",
+  appId: "1:485178815055:web:f91792229f8c359cf1303a",
+  measurementId: "G-EF147DP6ZB"
+};
 
-    const loginForm = document.getElementById("loginForm");
-    const errorMsg = document.getElementById("errorMsg");
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-      try {
-        await auth.signInWithEmailAndPassword(email, password);
-        window.location.href = "index.html";
-      } catch (error) {
-        errorMsg.textContent = "メールアドレスまたはパスワードが正しくありません。";
-      }
-    });
-  </script>
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    alert("ログイン成功！");
+    window.location.href = "index.html";
+  } catch (error) {
+    alert("ログインに失敗しました: " + error.message);
+  }
+});
+</script>
+
 </body>
 </html>
