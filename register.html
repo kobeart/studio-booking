@@ -108,67 +108,57 @@
 
 <!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
-    authDomain: "studio-rental-180df.firebaseapp.com",
-    projectId: "studio-rental-180df",
-    storageBucket: "studio-rental-180df.firebasestorage.app",
-    messagingSenderId: "485178815055",
-    appId: "1:485178815055:web:f91792229f8c359cf1303a",
-    measurementId: "G-EF147DP6ZB"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+  authDomain: "studio-rental-180df.firebaseapp.com",
+  projectId: "studio-rental-180df",
+  storageBucket: "studio-rental-180df.firebasestorage.app",
+  messagingSenderId: "485178815055",
+  appId: "1:485178815055:web:f91792229f8c359cf1303a",
+  measurementId: "G-EF147DP6ZB"
+};
 
-  // Firebase 初期化
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  // 登録処理
-  const registerForm = document.getElementById("registerForm");
-  const errorMsg = document.getElementById("errorMsg");
+const registerForm = document.getElementById("registerForm");
+const errorMsg = document.getElementById("errorMsg");
 
-  registerForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("name").value.trim();
-    const organization = document.getElementById("organization").value.trim();
-    const address = document.getElementById("address").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const genre = document.getElementById("genre").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+registerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    // 🔐 パスワードバリデーション
-    if (!/(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}/.test(password)) {
-      errorMsg.textContent = "パスワードは英数字8文字以上で、英字と数字を含めてください。";
-      return;
-    }
+  const name = document.getElementById("name").value.trim();
+  const organization = document.getElementById("organization").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const genre = document.getElementById("genre").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-    try {
-      // ✅ 新規登録
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+  if (!/(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}/.test(password)) {
+    errorMsg.textContent = "パスワードは英数字8文字以上で、英字と数字を含めてください。";
+    return;
+  }
 
-      // ✅ Firestore にユーザーデータ保存
-      await setDoc(doc(db, "users", user.uid), {
-        name,
-        organization,
-        address,
-        phone,
-        genre,
-        email,
-        createdAt: new Date(),
-      });
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-      alert("登録が完了しました！");
-      window.location.href = "index.html";
-    } catch (error) {
-      errorMsg.textContent = "エラー：" + error.message;
-    }
-  });
+    await setDoc(doc(db, "users", user.uid), {
+      name, organization, address, phone, genre, email, createdAt: new Date()
+    });
+
+    alert("登録が完了しました！");
+    window.location.href = "index.html";
+  } catch (error) {
+    errorMsg.textContent = error.message;
+  }
+});
 </script>
 
 </body>
