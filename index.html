@@ -419,7 +419,7 @@ grouped[dateLabel].forEach(sel => {
   div.style.justifyContent = "space-between";
   div.style.alignItems = "center";
   div.style.padding = "10px 14px";
-  div.style.color = "#fff";
+  div.style.color = "#000";
   div.style.fontWeight = "bold";
 
   // ▼ 利用時間とスタジオ名を大きく中央寄せ
@@ -432,27 +432,22 @@ grouped[dateLabel].forEach(sel => {
     <div style="font-size: 13px; opacity: 0.8;">¥${studioRates[sel.studio].toLocaleString()}（税込）</div>
   `; // ← ★ここに閉じバッククォートを忘れない！
 
+  const removeBtn = document.createElement("button");
+  removeBtn.textContent = "削除";
+  removeBtn.style.background = "none";
+  removeBtn.style.border = "none";
+  removeBtn.style.color = "black";
+  removeBtn.style.cursor = "pointer";
+  removeBtn.style.fontWeight = "bold";
+  removeBtn.style.textDecoration = "underline";
+  removeBtn.style.fontSize = "13px";
+  removeBtn.style.alignSelf = "center";
+  removeBtn.onclick = () => removeSelection(sel.date, sel.studio, sel.time);
 
-      // ▼ 削除ボタン（テキストリンク風）
-      const removeBtn = document.createElement("button");
-      removeBtn.textContent = "削除";
-      removeBtn.style.background = "none";
-      removeBtn.style.border = "none";
-      removeBtn.style.color = "white";
-      removeBtn.style.cursor = "pointer";
-      removeBtn.style.fontWeight = "bold";
-      removeBtn.style.textDecoration = "underline";
-      removeBtn.style.fontSize = "12px";
-      removeBtn.onclick = () => removeSelection(sel.date, sel.studio, sel.time);
-
-      // ▼ テキスト内容
-      const info = document.createElement("div");
-      info.innerHTML = `${sel.time}<br>${sel.studio}　¥${studioRates[sel.studio]}`;
-
-      div.appendChild(info);
-      div.appendChild(removeBtn);
-      groupBox.appendChild(div);
-    });
+  div.appendChild(info);
+  div.appendChild(removeBtn);
+  groupBox.appendChild(div);
+});
 
     selectionSummary.appendChild(groupBox);
   });
@@ -520,6 +515,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
