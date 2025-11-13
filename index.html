@@ -396,15 +396,16 @@ function renderSelections() {
     groupBox.style.background = "rgba(255,255,255,0.08)";
     groupBox.style.border = "1px solid rgba(255,255,255,0.2)";
     groupBox.style.borderRadius = "8px";
-    groupBox.style.padding = "10px";
-    groupBox.style.marginBottom = "12px";
+    groupBox.style.padding = "12px 14px";
+    groupBox.style.marginBottom = "14px";
 
     // 日付タイトル
     const title = document.createElement("div");
     title.textContent = dateLabel;
     title.style.fontWeight = "bold";
-    title.style.marginBottom = "6px";
+    title.style.marginBottom = "8px";
     title.style.color = "#fff";
+    title.style.fontSize = "15px";
     groupBox.appendChild(title);
 
     // ▼ その日のスタジオ予約一覧
@@ -412,12 +413,34 @@ function renderSelections() {
       const div = document.createElement("div");
       div.className = "selection-item";
       div.style.backgroundColor = studioColors[sel.studio];
-      div.style.margin = "4px 0";
-      div.innerHTML = `
-        <div>
-          ${sel.time}<br>${sel.studio}　¥${studioRates[sel.studio]}
-        </div>
-        <button onclick="removeSelection('${sel.date}','${sel.studio}','${sel.time}')">削除</button>`;
+      div.style.margin = "6px 0";
+      div.style.borderRadius = "6px";
+      div.style.display = "flex";
+      div.style.justifyContent = "space-between";
+      div.style.alignItems = "center";
+      div.style.padding = "6px 10px";
+      div.style.color = "#000";
+      div.style.fontWeight = "bold";
+      div.style.fontSize = "13px";
+
+      // ▼ 削除ボタン（テキストリンク風）
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "削除";
+      removeBtn.style.background = "none";
+      removeBtn.style.border = "none";
+      removeBtn.style.color = "black";
+      removeBtn.style.cursor = "pointer";
+      removeBtn.style.fontWeight = "bold";
+      removeBtn.style.textDecoration = "underline";
+      removeBtn.style.fontSize = "12px";
+      removeBtn.onclick = () => removeSelection(sel.date, sel.studio, sel.time);
+
+      // ▼ テキスト内容
+      const info = document.createElement("div");
+      info.innerHTML = `${sel.time}<br>${sel.studio}　¥${studioRates[sel.studio]}`;
+
+      div.appendChild(info);
+      div.appendChild(removeBtn);
       groupBox.appendChild(div);
     });
 
@@ -487,6 +510,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
