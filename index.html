@@ -387,7 +387,36 @@
 
 <button class="proceed-btn">予約へ進む</button>
 
+<!-- EmailJS SDKを最初に読み込み -->
+<script type="text/javascript" src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
+<script>
+  (function(){
+    emailjs.init("あなたのPublic Key"); // 例：emailjs.init("abcd123XYZ");
+  })();
+</script>
+
+<!-- Firebaseなどのモジュールスクリプトはこの後 -->
 <script type="module">
+  /* Firebase設定 ここから */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  // Firebaseの初期化など以下続く...
+</script>
+
+<!-- Firebaseなどのモジュールスクリプトはこの後 -->
+<script type="module">
+  /* Firebase設定 ここから */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  // Firebaseの初期化など以下続く...
+</script>
+
+<script type="module">
+
 /* Firebase設定 */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -606,6 +635,49 @@ document.getElementById("closeModal").addEventListener("click", () => {
 document.getElementById("agreeCheck").addEventListener("change", (e) => {
   document.getElementById("confirmBooking").disabled = !e.target.checked;
 });
+// 🔹 「予約を確定する」ボタン
+document.getElementById("confirmBooking").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("ログインが必要です。");
+    return;
+  }
+
+  const invoiceName = document.getElementById("invoiceName").value.trim();
+  const remarks = document.getElementById("remarks").value.trim();
+  const payment = document.querySelector('input[name="payment"]:checked').value;
+
+  if (selectedSlots.length === 0) {
+    alert("予約枠が選択されていません。");
+    return;
+  }
+
+  // Firestoreに書き込み
+  try {
+    for (const slot of selectedSlots) {
+      const id = `${slot.studio}_${slot.date}_${slot.time}`;
+      const docRef = doc(db, "reservations", id);
+      await setDoc(docRef, {
+        studio: slot.studio,
+        date: slot.date,
+        time: slot.time,
+        userEmail: user.email,
+        invoiceName: invoiceName,
+        remarks: remarks,
+        payment: payment,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    alert("予約が完了しました！");
+    document.getElementById("confirmModal").style.display = "none";
+    window.location.reload(); // ページを再読み込みして✕表示を更新
+  } catch (err) {
+    console.error("Firestore 書き込みエラー:", err);
+    alert("予約の保存中にエラーが発生しました。");
+  }
+});
+
 
 </script>
 </body>
