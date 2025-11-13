@@ -409,48 +409,90 @@ function renderSelections() {
     groupBox.appendChild(title);
 
 // ▼ その日のスタジオ予約一覧
-grouped[dateLabel].forEach(sel => {
-  const div = document.createElement("div");
-  div.className = "selection-item";
-  div.style.backgroundColor = studioColors[sel.studio];
-  div.style.margin = "6px 0";
-  div.style.borderRadius = "8px";
-  div.style.display = "flex";
-  div.style.justifyContent = "space-between";
-  div.style.alignItems = "center";
-  div.style.padding = "10px 14px";
-  div.style.color = "#000";
-  div.style.fontWeight = "bold";
+selectionSummary.innerHTML = ""; // まず空に
 
-  // ▼ 利用時間とスタジオ名を大きく中央寄せ
-  const info = document.createElement("div");
-  info.innerHTML = `
-    <div style="font-size: 18px; line-height: 1.2;">
-      ${sel.time}　
-      <span style="font-size: 20px;">${sel.studio}</span>
-    </div>
-    <div style="font-size: 13px; opacity: 0.8;">¥${studioRates[sel.studio].toLocaleString()}（税込）</div>
-  `; // ← ★ここに閉じバッククォートを忘れない！
+// 「選択中」タイトル表示（1つでも選択があるとき）
+if (selections.length > 0) {
+  const title = document.createElement("h3");
+  title.textContent = "選択中";
+  title.style.textAlign = "center";
+  title.style.marginTop = "25px";
+  title.style.color = "#ffffff";
+  title.style.fontSize = "18px";
+  selectionSummary.appendChild(title);
+}
 
-  const removeBtn = document.createElement("button");
-  removeBtn.textContent = "削除";
-  removeBtn.style.background = "none";
-  removeBtn.style.border = "none";
-  removeBtn.style.color = "black";
-  removeBtn.style.cursor = "pointer";
-  removeBtn.style.fontWeight = "bold";
-  removeBtn.style.textDecoration = "underline";
-  removeBtn.style.fontSize = "13px";
-  removeBtn.style.alignSelf = "center";
-  removeBtn.onclick = () => removeSelection(sel.date, sel.studio, sel.time);
-
-  div.appendChild(info);
-  div.appendChild(removeBtn);
-  groupBox.appendChild(div);
+// ▼ 日付ごとにグループ化
+const grouped = {};
+selections.forEach(sel => {
+  const d = new Date(sel.date);
+  const dateLabel = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${["日","月","火","水","木","金","土"][d.getDay()]}）`;
+  if (!grouped[dateLabel]) grouped[dateLabel] = [];
+  grouped[dateLabel].push(sel);
 });
 
-    selectionSummary.appendChild(groupBox);
+// ▼ 各日付ごとのブロック生成
+Object.keys(grouped).forEach(dateLabel => {
+  const dateGroup = document.createElement("div");
+  dateGroup.style.backgroundColor = "rgba(255,255,255,0.1)";
+  dateGroup.style.border = "1px solid rgba(255,255,255,0.2)";
+  dateGroup.style.borderRadius = "10px";
+  dateGroup.style.margin = "15px 0";
+  dateGroup.style.padding = "10px";
+  dateGroup.style.color = "#fff";
+
+  // 日付タイトル
+  const dateHeader = document.createElement("div");
+  dateHeader.textContent = dateLabel;
+  dateHeader.style.fontWeight = "bold";
+  dateHeader.style.fontSize = "16px";
+  dateHeader.style.marginBottom = "6px";
+  dateHeader.style.textAlign = "left";
+  dateHeader.style.color = "#ffffff";
+  dateGroup.appendChild(dateHeader);
+
+  // ▼ その日のスタジオ予約一覧
+  grouped[dateLabel].forEach(sel => {
+    const div = document.createElement("div");
+    div.className = "selection-item";
+    div.style.backgroundColor = studioColors[sel.studio];
+    div.style.margin = "6px 0";
+    div.style.borderRadius = "8px";
+    div.style.display = "flex";
+    div.style.justifyContent = "space-between";
+    div.style.alignItems = "center";
+    div.style.padding = "10px 14px";
+    div.style.color = "#fff";
+    div.style.fontWeight = "bold";
+
+    // ▼ 利用時間とスタジオ名を白字・大きく中央寄せ
+    const info = document.createElement("div");
+    info.innerHTML = `
+      <div style="font-size: 20px; line-height: 1.2;">
+        ${sel.time}　
+        <span style="font-size: 20px;">${sel.studio}</span>
+      </div>
+      <div style="font-size: 13px; opacity: 0.8;">¥${studioRates[sel.studio].toLocaleString()}（税込）</div>
+    `;
+
+    // ▼ 削除ボタン
+    const btn = document.createElement("button");
+    btn.textContent = "削除";
+    btn.style.background = "none";
+    btn.style.border = "none";
+    btn.style.color = "#fff";
+    btn.style.cursor = "pointer";
+    btn.style.fontSize = "13px";
+    btn.style.textDecoration = "underline";
+    btn.onclick = () => removeSelection(sel.date, sel.studio, sel.time);
+
+    div.appendChild(info);
+    div.appendChild(btn);
+    dateGroup.appendChild(div);
   });
+
+  selectionSummary.appendChild(dateGroup);
+});
 
   // 合計金額表示
   const total = selections.reduce((sum, s) => sum + studioRates[s.studio], 0);
@@ -515,6 +557,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
