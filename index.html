@@ -254,8 +254,110 @@
     box-shadow: 0 0 10px rgba(255,255,255,0.3);
     animation: whiteSoft 2s infinite alternate;
   }
+/* 🔹 モーダル全体 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+/* 🔹 モーダル内容 */
+.modal-content {
+  background: #0a1a2f;
+  border: 1px solid #ffffff33;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  color: white;
+  box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  overflow-y: auto;
+  max-height: 85vh;
+}
+
+.modal-body {
+  background: rgba(255,255,255,0.05);
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#closeModal {
+  background-color: #555;
+  color: white;
+}
+
+#confirmBooking {
+  background: radial-gradient(circle, rgba(255,255,255,0.25), rgba(255,255,255,0.05));
+  color: white;
+  box-shadow: 0 0 8px rgba(255,255,255,0.3);
+}
+#confirmBooking:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 </style>
 </head>
+<!-- 🔹 予約確認モーダル -->
+<div id="confirmModal" class="modal">
+  <div class="modal-content">
+    <h2>ご利用規約・キャンセルポリシー</h2>
+    <div class="modal-body">
+      <p>
+        ・スタジオのご予約は6ヶ月先の月末まで承ります。<br>
+        ・キャンセル料は以下の通りです：<br>
+        　・30日前まで：無料<br>
+        　・29〜8日前：利用料の50％<br>
+        　・7日前以降：利用料の100％<br>
+        ・ご予約確定後の日時変更もキャンセル扱いとなります。<br>
+        ・お支払いは「銀行振込」または「現金」にてお願いいたします。<br>
+        ・「予約を確定する」を押した時点で上記規定に同意したものとみなされます。
+      </p>
+    </div>
+
+    <div class="modal-form">
+      <label><input type="checkbox" id="agreeCheck"> 規約に同意します</label><br><br>
+
+      <label>支払い方法：</label><br>
+      <label><input type="radio" name="payment" value="bank" checked> 銀行振込</label>
+      <label><input type="radio" name="payment" value="cash"> 現金支払い</label><br><br>
+
+      <label>請求書宛名：</label><br>
+      <input type="text" id="invoiceName" placeholder="例：神戸芸術センター 様" style="width:100%; margin-bottom:10px;"><br>
+
+      <label>備考：</label><br>
+      <textarea id="remarks" rows="3" style="width:100%;"></textarea><br><br>
+    </div>
+
+    <div class="modal-actions">
+      <button id="closeModal">閉じる</button>
+      <button id="confirmBooking" disabled>予約を確定する</button>
+    </div>
+  </div>
+</div>
+
 <body>
 <header>
   <h1>神戸芸術センター・スタジオWEB予約</h1>
@@ -490,6 +592,21 @@ function removeSelection(date,studio,time){
   renderSelections();
   renderStudios();
 }
+// 🔹 「予約へ進む」ボタンでモーダルを開く
+document.querySelector(".proceed-btn").addEventListener("click", () => {
+  document.getElementById("confirmModal").style.display = "flex";
+});
+
+// 🔹 「閉じる」ボタン
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("confirmModal").style.display = "none";
+});
+
+// 🔹 チェックボックスで「予約を確定する」を有効化
+document.getElementById("agreeCheck").addEventListener("change", (e) => {
+  document.getElementById("confirmBooking").disabled = !e.target.checked;
+});
+
 </script>
 </body>
 </html>
