@@ -285,12 +285,54 @@
 
 <button class="proceed-btn">予約へ進む</button>
 
-<script>
-const username = "田中太郎"; 
-document.getElementById("username").innerText = username;
+<script type="module">
+/* Firebase設定 */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-function logout() { alert("ログアウトしました"); }
+const firebaseConfig = {
+  apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+  authDomain: "studio-rental-180df.firebaseapp.com",
+  projectId: "studio-rental-180df",
+  storageBucket: "studio-rental-180df.firebasestorage.app",
+  messagingSenderId: "485178815055",
+  appId: "1:485178815055:web:f91792229f8c359cf1303a",
+  measurementId: "G-EF147DP6ZB"
+};
 
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ▼ ユーザー名表示とログアウト */
+const usernameSpan = document.getElementById("username");
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    try {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        usernameSpan.textContent = userDoc.data().name;
+      } else {
+        usernameSpan.textContent = user.email;
+      }
+    } catch (e) {
+      console.error("ユーザー情報取得エラー:", e);
+      usernameSpan.textContent = user.email;
+    }
+  } else {
+    window.location.href = "register.html";
+  }
+});
+
+window.logout = async function () {
+  await signOut(auth);
+  alert("ログアウトしました");
+  window.location.href = "register.html";
+};
+
+/* ===== 以下、元の予約システム部分を保持 ===== */
 const monthLabel = document.getElementById("monthLabel");
 const calendar = document.getElementById("calendar");
 const studioGrid = document.getElementById("studioGrid");
@@ -304,7 +346,6 @@ const studios = ["A", "B", "C", "EF", "R"];
 const studioRates = { A:1100, B:1100, C:1980, EF:2310, R:2090 };
 const studioColors = { A:"#cc7b9b", B:"#7aa6c7", C:"#7fc980", EF:"#7988c7", R:"#d9c46e" };
 
-// 🔹 カレンダーの制御パラメータ
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 let displayYear = today.getFullYear();
@@ -314,8 +355,6 @@ let maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 0);
 
 function renderCalendar(year = displayYear, month = displayMonth) {
   calendar.innerHTML = "";
-
-  // 曜日ヘッダー
   const headers = ["月","火","水","木","金","土","日"];
   headers.forEach((d, i) => {
     const h = document.createElement("div");
@@ -324,10 +363,9 @@ function renderCalendar(year = displayYear, month = displayMonth) {
     calendar.appendChild(h);
   });
 
-  // 日付生成
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const start = (firstDay.getDay() + 6) % 7; // 月曜始まり
+  const start = (firstDay.getDay() + 6) % 7;
   monthLabel.textContent = `${year}年${month + 1}月`;
 
   for (let i = 0; i < start; i++) calendar.appendChild(document.createElement("div"));
@@ -337,11 +375,9 @@ function renderCalendar(year = displayYear, month = displayMonth) {
     const div = document.createElement("div");
     div.textContent = d;
     div.className = "day";
-
     if (date.getDay() === 6) div.classList.add("sat");
     if (date.getDay() === 0) div.classList.add("sun");
 
-    // 今日より前は非アクティブ
     if (date < today) {
       div.style.opacity = "0.3";
       div.style.pointerEvents = "none";
@@ -353,12 +389,6 @@ function renderCalendar(year = displayYear, month = displayMonth) {
       });
     }
 
-    // 今日
-    if (date.getTime() === today.getTime()) {
-      div.classList.add("today");
-    }
-
-    // 選択中
     if (
       date.getFullYear() === selectedDate.getFullYear() &&
       date.getMonth() === selectedDate.getMonth() &&
@@ -366,11 +396,9 @@ function renderCalendar(year = displayYear, month = displayMonth) {
     ) {
       div.classList.add("selected");
     }
-
     calendar.appendChild(div);
   }
 
-  // ボタン制御
   document.getElementById("prevMonth").disabled = new Date(year, month) <= minDate;
   document.getElementById("nextMonth").disabled = new Date(year, month, 1) >= maxDate;
 }
@@ -395,14 +423,12 @@ document.getElementById("nextMonth").onclick = () => {
   renderCalendar(displayYear, displayMonth);
 };
 
-// 🔹 初期表示（今日を選択）
 window.addEventListener("load", () => {
   selectedDate = new Date(today);
   renderCalendar();
   renderStudios();
 });
 
-// 🔹 スタジオ一覧（元のまま利用）
 function renderStudios(){
   studioGrid.innerHTML="";
   const times=Array.from({length:15},(_,i)=>`${7+i}:00〜${8+i}:00`);
@@ -418,7 +444,7 @@ function renderStudios(){
       const slot=document.createElement("div");
       slot.className="timeslot available";
       slot.innerHTML=`${t}<br>〇`;
-      slot.style.backgroundColor=studioColors[studio].replace(")",",0.9)").replace("rgb","rgba");
+      slot.style.backgroundColor=studioColors[studio];
       slot.onclick=()=>toggleSelect(studio,t);
       if(selections.find(s=>s.date===selectedDate?.toDateString()&&s.time===t&&s.studio===studio)) slot.classList.add("selected");
       col.appendChild(slot);
@@ -427,7 +453,6 @@ function renderStudios(){
   });
 }
 
-// 🔹 選択・削除機能（元のまま）
 function toggleSelect(studio,time){
   if(!selectedDate)return;
   const key={date:selectedDate.toDateString(),studio,time};
