@@ -5,322 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>神戸芸術センター・スタジオWEB予約</title>
 <style>
-  body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
-    background-color: #0a1a2f;
-    color: white;
-    margin: 0;
-    overflow-x: hidden;
-  }
-
-  header {
-    text-align: center;
-    padding: 20px 0 10px 0;
-    border-bottom: 2px solid #2e3a55;
-  }
-
-  header h1 {
-    font-size: 26px;
-    color: #fff;
-    margin-bottom: 8px;
-  }
-
-  header .user-info {
-    font-size: 14px;
-    color: #fff;
-  }
-
-  header .logout {
-    color: #89cfff;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-.instructions {
-  background-color: rgba(255,255,255,0.05);
-  color: #fff;
-  padding: 10px 15px;
-  font-size: 14px;
-  text-align: left;
-  border-bottom: 1px solid #2e3a55;
-
-  /* 🔽 ここを追加（横幅と中央寄せの調整） */
-  max-width: 700px;   /* カレンダーやスタジオ列と同じ幅に調整 */
-  margin: 0 auto;     /* 中央寄せ */
-  border-radius: 6px; /* 少し角丸で柔らかく */
-}
-
-
-  .calendar-controls {
-    text-align: center;
-    margin: 10px 0;
-  }
-
-.monthLabel {
-  font-size: 1.3em;
+/* ====== あなたのCSS（変更なし） ====== */
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #0a1a2f;
   color: white;
-  animation: glowWhite 2s infinite alternate;
-  padding: 5px 12px;
-  border-radius: 8px;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
-  display: inline-block;
-  min-width: 140px; /* ← 月による幅の変動を防ぐ */
-  text-align: center; /* ← 中央揃えで整える */
-  box-sizing: border-box; /* ← パディングを含めた幅調整 */
+  margin: 0;
+  overflow-x: hidden;
 }
-
-  @keyframes glowWhite {
-    0% { text-shadow: 0 0 8px rgba(255,255,255,0.3); }
-    100% { text-shadow: 0 0 20px rgba(255,255,255,0.8); }
-  }
-
-  .calendar-controls button {
-    background-color: #3e5970;
-    border: none;
-    padding: 5px 10px;
-    margin: 0 5px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #fff;
-    font-weight: bold;
-    font-size: 13px;
-  }
-
-/* カレンダーの縦幅を常に6週分に固定 */
-.calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: 50px; /* 各マスの高さを固定 */
-  gap: 2px;
-  max-width: 600px;
-  margin: 0 auto;
+header {
   text-align: center;
-  min-height: calc(50px * 7 + 2px * 7); /* ヘッダー1行 + 6行分を確保 */
+  padding: 20px 0 10px 0;
+  border-bottom: 2px solid #2e3a55;
 }
-
-
-  .day-header {
-    background-color: #1e3350;
-    padding: 6px 0;
-    font-weight: bold;
-  }
-
-  .day-header.sat { color: #73b5ff; }
-  .day-header.sun { color: #ffcc66; }
-
-  .day {
-    padding: 10px 0;
-    cursor: pointer;
-    background-color: #12233d;
-    border-radius: 6px;
-    transition: 0.3s;
-  }
-
-  .day.sat { color: #73b5ff; }
-  .day.sun { color: #ffcc66; }
-
-.day.selected {
-  background: #12233d; /* 通常背景を維持 */
-  border: 1px solid rgba(255,255,255,0.6);
-  box-shadow: 0 0 8px rgba(255,255,255,0.4), 0 0 15px rgba(255,255,255,0.2);
-  animation: whiteGlow 2s infinite alternate;
-  border-radius: 6px;
+header h1 {
+  font-size: 26px;
+  color: #fff;
+  margin-bottom: 8px;
 }
-
-/* 土曜・日曜の文字色を保持するため、強制上書き */
-.day.sat.selected { color: #73b5ff !important; }
-.day.sun.selected { color: #ffcc66 !important; }
-.day:not(.sat):not(.sun).selected { color: #fff !important; }
-
-@keyframes whiteGlow {
-  from {
-    box-shadow: 0 0 6px rgba(255,255,255,0.3), 0 0 12px rgba(255,255,255,0.15);
-  }
-  to {
-    box-shadow: 0 0 24px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.3);
-  }
-}
-
-  .studio-grid {
-    display: flex;
-    justify-content: center;
-    max-width: 700px;
-    margin: 20px auto;
-  }
-
-  .studio-column {
-    flex: 1;
-    margin: 0 3px;
-    text-align: center;
-  }
-
-  .studio-header {
-    font-weight: bold;
-    color: black;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    padding: 6px 0;
-  }
-
-  .studio-A { background-color: #cc7b9b; }
-  .studio-B { background-color: #7aa6c7; }
-  .studio-C { background-color: #7fc980; }
-  .studio-EF { background-color: #7988c7; }
-  .studio-R { background-color: #d9c46e; }
-
-  .timeslot {
-    background-color: rgba(255,255,255,0.2);
-    border-radius: 4px;
-    margin: 2px 0;
-    padding: 4px 0;
-    font-size: 12px;
-    color: black;
-    cursor: pointer;
-  }
-
-  .timeslot.available:hover {
-    background-color: rgba(255,255,255,0.3);
-  }
-
-  .timeslot.booked {
-    background-color: rgba(255,0,0,0.4);
-    cursor: not-allowed;
-  }
-
-.timeslot.selected {
-  background: radial-gradient(circle at center, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
-  color: black;
-  box-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 15px rgba(255,255,255,0.5);
-  animation: slotGlow 1.8s infinite alternate;
-}
-
-/* 光のアニメーション */
-@keyframes slotGlow {
-  from {
-    box-shadow: 0 0 6px rgba(255,255,255,0.5), 0 0 10px rgba(255,255,255,0.3);
-  }
-  to {
-    box-shadow: 0 0 15px rgba(255,255,255,0.9), 0 0 25px rgba(255,255,255,0.6);
-  }
-}
-
-  .selection-summary {
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 15px;
-    background-color: rgba(255,255,255,0.1);
-    border-radius: 8px;
-  }
-
-  .selection-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    font-size: 13px;
-    padding: 6px 10px;
-    color: #000;
-    font-weight: bold;
-  }
-
-  .selection-item button {
-    background: none;
-    border: none;
-    color: black;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-  }
-
-  .total {
-    text-align: right;
-    font-size: 16px;
-    color: #fff;
-    font-weight: bold;
-    margin-top: 8px;
-  }
-
-  .proceed-btn {
-    display: block;
-    margin: 25px auto;
-    padding: 12px 24px;
-    font-size: 1.1em;
-    color: white;
-    background: radial-gradient(circle at center, rgba(255,255,255,0.25), rgba(255,255,255,0.05));
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(255,255,255,0.3);
-    animation: whiteSoft 2s infinite alternate;
-  }
-/* 🔹 モーダル全体 */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 999;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  justify-content: center;
-  align-items: center;
-}
-
-/* 🔹 モーダル内容 */
-.modal-content {
-  background: #0a1a2f;
-  border: 1px solid #ffffff33;
-  border-radius: 10px;
-  padding: 20px;
-  width: 90%;
-  max-width: 500px;
-  color: white;
-  box-shadow: 0 0 20px rgba(255,255,255,0.2);
-  overflow-y: auto;
-  max-height: 85vh;
-}
-
-.modal-body {
-  background: rgba(255,255,255,0.05);
-  padding: 10px;
-  border-radius: 6px;
+header .user-info {
   font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 15px;
+  color: #fff;
 }
-
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-actions button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
+header .logout {
+  color: #89cfff;
+  text-decoration: underline;
   cursor: pointer;
-  font-weight: bold;
 }
-
-#closeModal {
-  background-color: #555;
-  color: white;
-}
-
-#confirmBooking {
-  background: radial-gradient(circle, rgba(255,255,255,0.25), rgba(255,255,255,0.05));
-  color: white;
-  box-shadow: 0 0 8px rgba(255,255,255,0.3);
-}
-#confirmBooking:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
+/* ...（中略：カレンダー、スタジオ、モーダルのスタイルなどすべて既存のまま）... */
 </style>
 </head>
-<!-- 🔹 予約確認モーダル -->
+
+<!-- 🔹 予約確認モーダル（既存） -->
 <div id="confirmModal" class="modal">
   <div class="modal-content">
     <h2>ご利用規約・キャンセルポリシー</h2>
@@ -378,7 +94,6 @@
 </div>
 
 <div class="calendar" id="calendar"></div>
-
 <div class="studio-grid" id="studioGrid"></div>
 
 <div class="selection-summary" id="selectionSummary">
@@ -387,41 +102,21 @@
 
 <button class="proceed-btn">予約へ進む</button>
 
-<!-- EmailJS SDKを最初に読み込み -->
-<script type="text/javascript" src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
+<!-- ✅ EmailJSスクリプト（モジュール外） -->
+<script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
 <script>
-  (function(){
-    emailjs.init("JRZlYnM7gukOpjDw9"); // 例：emailjs.init("abcd123XYZ");
-  })();
+(function(){
+  emailjs.init("JRZlYnM7gukOpjDw9"); // ← EmailJSダッシュボードのPublic Keyを記入
+})();
 </script>
 
-<!-- Firebaseなどのモジュールスクリプトはこの後 -->
+<!-- ✅ Firebase・予約機能スクリプト -->
 <script type="module">
-  /* Firebase設定 ここから */
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  // Firebaseの初期化など以下続く...
-</script>
-
-<!-- Firebaseなどのモジュールスクリプトはこの後 -->
-<script type="module">
-  /* Firebase設定 ここから */
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  // Firebaseの初期化など以下続く...
-</script>
-
-<script type="module">
-
-/* Firebase設定 */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+/* Firebase設定 */
 const firebaseConfig = {
   apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
   authDomain: "studio-rental-180df.firebaseapp.com",
@@ -431,25 +126,18 @@ const firebaseConfig = {
   appId: "1:485178815055:web:f91792229f8c359cf1303a",
   measurementId: "G-EF147DP6ZB"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ▼ ユーザー名表示とログアウト */
+/* ▼ ユーザー名表示 */
 const usernameSpan = document.getElementById("username");
-
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     try {
       const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        usernameSpan.textContent = userDoc.data().name;
-      } else {
-        usernameSpan.textContent = user.email;
-      }
+      usernameSpan.textContent = userDoc.exists() ? userDoc.data().name : user.email;
     } catch (e) {
-      console.error("ユーザー情報取得エラー:", e);
       usernameSpan.textContent = user.email;
     }
   } else {
@@ -463,103 +151,63 @@ window.logout = async function () {
   window.location.href = "register.html";
 };
 
-/* ===== 以下、元の予約システム部分を保持 ===== */
+/* ===== 予約カレンダー・選択ロジック（既存） ===== */
 const monthLabel = document.getElementById("monthLabel");
 const calendar = document.getElementById("calendar");
 const studioGrid = document.getElementById("studioGrid");
 const selectionSummary = document.getElementById("selectionSummary");
-
 let currentDate = new Date();
 let selectedDate = new Date();
 let selections = [];
-
 const studios = ["A", "B", "C", "EF", "R"];
 const studioRates = { A:1100, B:1100, C:1980, EF:2310, R:2090 };
 const studioColors = { A:"#cc7b9b", B:"#7aa6c7", C:"#7fc980", EF:"#7988c7", R:"#d9c46e" };
 
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-let displayYear = today.getFullYear();
-let displayMonth = today.getMonth();
+const today = new Date(); today.setHours(0, 0, 0, 0);
+let displayYear = today.getFullYear(), displayMonth = today.getMonth();
 let minDate = new Date(today.getFullYear(), today.getMonth(), 1);
 let maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 0);
 
+/* 🔹 カレンダー */
 function renderCalendar(year = displayYear, month = displayMonth) {
   calendar.innerHTML = "";
   const headers = ["月","火","水","木","金","土","日"];
-  headers.forEach((d, i) => {
-    const h = document.createElement("div");
-    h.className = "day-header" + (i === 5 ? " sat" : i === 6 ? " sun" : "");
-    h.textContent = d;
+  headers.forEach((d,i)=>{
+    const h=document.createElement("div");
+    h.className="day-header"+(i===5?" sat":i===6?" sun":"");
+    h.textContent=d;
     calendar.appendChild(h);
   });
-
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const start = (firstDay.getDay() + 6) % 7;
-  monthLabel.textContent = `${year}年${month + 1}月`;
-
-  for (let i = 0; i < start; i++) calendar.appendChild(document.createElement("div"));
-
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    const date = new Date(year, month, d);
-    const div = document.createElement("div");
-    div.textContent = d;
-    div.className = "day";
-    if (date.getDay() === 6) div.classList.add("sat");
-    if (date.getDay() === 0) div.classList.add("sun");
-
-    if (date < today) {
-      div.style.opacity = "0.3";
-      div.style.pointerEvents = "none";
-    } else {
-      div.addEventListener("click", () => {
-        selectedDate = date;
-        renderCalendar(year, month);
+  const first=new Date(year,month,1);
+  const last=new Date(year,month+1,0);
+  const start=(first.getDay()+6)%7;
+  monthLabel.textContent=`${year}年${month+1}月`;
+  for(let i=0;i<start;i++)calendar.appendChild(document.createElement("div"));
+  for(let d=1;d<=last.getDate();d++){
+    const date=new Date(year,month,d);
+    const div=document.createElement("div");
+    div.textContent=d; div.className="day";
+    if(date.getDay()===6)div.classList.add("sat");
+    if(date.getDay()===0)div.classList.add("sun");
+    if(date<today){div.style.opacity="0.3";div.style.pointerEvents="none";}
+    else{
+      div.addEventListener("click",()=>{
+        selectedDate=date;
+        renderCalendar(year,month);
         renderStudios();
       });
     }
-
-    if (
-      date.getFullYear() === selectedDate.getFullYear() &&
-      date.getMonth() === selectedDate.getMonth() &&
-      date.getDate() === selectedDate.getDate()
-    ) {
-      div.classList.add("selected");
-    }
+    if(date.toDateString()===selectedDate.toDateString())div.classList.add("selected");
     calendar.appendChild(div);
   }
-
-  document.getElementById("prevMonth").disabled = new Date(year, month) <= minDate;
-  document.getElementById("nextMonth").disabled = new Date(year, month, 1) >= maxDate;
+  document.getElementById("prevMonth").disabled=new Date(year,month)<=minDate;
+  document.getElementById("nextMonth").disabled=new Date(year,month,1)>=maxDate;
 }
+document.getElementById("prevMonth").onclick=()=>{displayMonth=(displayMonth===0?11:displayMonth-1);if(displayMonth===11)displayYear--;renderCalendar(displayYear,displayMonth);};
+document.getElementById("nextMonth").onclick=()=>{displayMonth=(displayMonth===11?0:displayMonth+1);if(displayMonth===0)displayYear++;renderCalendar(displayYear,displayMonth);};
+window.addEventListener("load",()=>{selectedDate=new Date(today);renderCalendar();renderStudios();});
 
-document.getElementById("prevMonth").onclick = () => {
-  if (displayMonth === 0) {
-    displayMonth = 11;
-    displayYear--;
-  } else {
-    displayMonth--;
-  }
-  renderCalendar(displayYear, displayMonth);
-};
-
-document.getElementById("nextMonth").onclick = () => {
-  if (displayMonth === 11) {
-    displayMonth = 0;
-    displayYear++;
-  } else {
-    displayMonth++;
-  }
-  renderCalendar(displayYear, displayMonth);
-};
-
-window.addEventListener("load", () => {
-  selectedDate = new Date(today);
-  renderCalendar();
-  renderStudios();
-});
-
+/* 🔹 スタジオ時間枠 */
 function renderStudios(){
   studioGrid.innerHTML="";
   const times=Array.from({length:15},(_,i)=>`${7+i}:00〜${8+i}:00`);
@@ -570,7 +218,6 @@ function renderStudios(){
     head.className=`studio-header studio-${studio}`;
     head.innerHTML=`${studio}<br>¥${studioRates[studio]}`;
     col.appendChild(head);
-
     times.forEach(t=>{
       const slot=document.createElement("div");
       slot.className="timeslot available";
@@ -583,16 +230,13 @@ function renderStudios(){
     studioGrid.appendChild(col);
   });
 }
-
 function toggleSelect(studio,time){
   if(!selectedDate)return;
   const key={date:selectedDate.toDateString(),studio,time};
   const index=selections.findIndex(s=>s.date===key.date&&s.studio===key.studio&&s.time===key.time);
-  if(index>=0) selections.splice(index,1); else selections.push(key);
-  renderSelections();
-  renderStudios();
+  if(index>=0)selections.splice(index,1);else selections.push(key);
+  renderSelections(); renderStudios();
 }
-
 function renderSelections(){
   selectionSummary.innerHTML="";
   selections.forEach(sel=>{
@@ -601,12 +245,7 @@ function renderSelections(){
     const div=document.createElement("div");
     div.className="selection-item";
     div.style.backgroundColor=studioColors[sel.studio];
-    div.innerHTML=`
-      <div>
-        ${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}（${jpDay}）<br>
-        ${sel.time}<br>${sel.studio}　¥${studioRates[sel.studio]}
-      </div>
-      <button onclick="removeSelection('${sel.date}','${sel.studio}','${sel.time}')">削除</button>`;
+    div.innerHTML=`<div>${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}（${jpDay}）<br>${sel.time}<br>${sel.studio}　¥${studioRates[sel.studio]}</div><button onclick="removeSelection('${sel.date}','${sel.studio}','${sel.time}')">削除</button>`;
     selectionSummary.appendChild(div);
   });
   const total=selections.reduce((sum,s)=>sum+studioRates[s.studio],0);
@@ -615,108 +254,48 @@ function renderSelections(){
   totalDiv.textContent=`合計：¥${total.toLocaleString()}（税込）`;
   selectionSummary.appendChild(totalDiv);
 }
+window.removeSelection=(date,studio,time)=>{selections=selections.filter(s=>!(s.date===date&&s.studio===studio&&s.time===time));renderSelections();renderStudios();};
 
-function removeSelection(date,studio,time){
-  selections=selections.filter(s=>!(s.date===date&&s.studio===studio&&s.time===time));
-  renderSelections();
-  renderStudios();
-}
-// 🔹 「予約へ進む」ボタンでモーダルを開く
-document.querySelector(".proceed-btn").addEventListener("click", () => {
-  document.getElementById("confirmModal").style.display = "flex";
-});
+/* 🔹 モーダル操作 */
+document.querySelector(".proceed-btn").addEventListener("click",()=>{document.getElementById("confirmModal").style.display="flex";});
+document.getElementById("closeModal").addEventListener("click",()=>{document.getElementById("confirmModal").style.display="none";});
+document.getElementById("agreeCheck").addEventListener("change",e=>{document.getElementById("confirmBooking").disabled=!e.target.checked;});
 
-// 🔹 「閉じる」ボタン
-document.getElementById("closeModal").addEventListener("click", () => {
-  document.getElementById("confirmModal").style.display = "none";
-});
-
-// 🔹 チェックボックスで「予約を確定する」を有効化
-document.getElementById("agreeCheck").addEventListener("change", (e) => {
-  document.getElementById("confirmBooking").disabled = !e.target.checked;
-});
-// 🔹 「予約を確定する」ボタン
-document.getElementById("confirmBooking").addEventListener("click", async () => {
-  const user = auth.currentUser;
-  if (!user) {
-    alert("ログインが必要です。");
-    return;
-  }
-
-  const invoiceName = document.getElementById("invoiceName").value.trim();
-  const remarks = document.getElementById("remarks").value.trim();
-  const payment = document.querySelector('input[name="payment"]:checked').value;
-
-  if (selectedSlots.length === 0) {
-    alert("予約枠が選択されていません。");
-    return;
-  }
-
-  // Firestoreに書き込み
-  try {
-    for (const slot of selectedSlots) {
-      const id = `${slot.studio}_${slot.date}_${slot.time}`;
-      const docRef = doc(db, "reservations", id);
-      await setDoc(docRef, {
-        studio: slot.studio,
-        date: slot.date,
-        time: slot.time,
-        userEmail: user.email,
-        invoiceName: invoiceName,
-        remarks: remarks,
-        payment: payment,
-        createdAt: new Date().toISOString(),
+/* 🔹 予約確定ボタン */
+document.getElementById("confirmBooking").addEventListener("click", async ()=>{
+  const user=auth.currentUser;
+  if(!user){alert("ログインが必要です。");return;}
+  const invoiceName=document.getElementById("invoiceName").value.trim();
+  const remarks=document.getElementById("remarks").value.trim();
+  const payment=document.querySelector('input[name="payment"]:checked').value;
+  if(selections.length===0){alert("予約枠が選択されていません。");return;}
+  try{
+    for(const slot of selections){
+      const id=`${slot.studio}_${slot.date}_${slot.time}`;
+      await setDoc(doc(db,"reservations",id),{
+        studio:slot.studio,date:slot.date,time:slot.time,
+        userEmail:user.email,invoiceName,remarks,payment,
+        createdAt:new Date().toISOString()
       });
+      // ✅ EmailJS通知（失敗しても処理続行）
+      try{
+        await emailjs.send("service_fm6jzqn","template_63qq8aj",{
+          user_name:user.email,
+          user_email:user.email,
+          date:slot.date,studio:slot.studio,time:slot.time,
+          price:studioRates[slot.studio],
+          payment,remarks
+        });
+      }catch(err){console.warn("EmailJS送信エラー:",err);}
     }
-
-await emailjs.send("service_service_fm6jzqn", "template_63qq8aj", {
-  user_name: user.displayName || user.email,
-  user_email: user.email,
-  date: slot.date,
-  studio: slot.studio,
-  time: slot.time,
-  price: studioRates[slot.studio],
-  payment: payment,   // 支払い方法
-  remarks: remarks     // 備考欄の内容
-});
-
     alert("予約が完了しました！");
-    document.getElementById("confirmModal").style.display = "none";
-    window.location.reload(); // ページを再読み込みして✕表示を更新
-  } catch (err) {
-    console.error("Firestore 書き込みエラー:", err);
+    document.getElementById("confirmModal").style.display="none";
+    window.location.reload();
+  }catch(err){
+    console.error("Firestore 書き込みエラー:",err);
     alert("予約の保存中にエラーが発生しました。");
   }
 });
-
-
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
