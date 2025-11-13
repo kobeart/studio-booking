@@ -208,117 +208,165 @@
 </script>
 
 <script type="module">
+
+/* ========== Firebase 設定 ========== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
   authDomain: "studio-rental-180df.firebaseapp.com",
   projectId: "studio-rental-180df",
+  storageBucket: "studio-rental-180df.firebasestorage.app",
+  messagingSenderId: "485178815055",
+  appId: "1:485178815055:web:f91792229f8c359cf1303a",
+  measurementId: "G-EF147DP6ZB"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ========== ログインユーザー表示 ========== */
 const usernameSpan = document.getElementById("username");
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    usernameSpan.textContent = userDoc.exists() ? userDoc.data().name : user.email;
-  } else window.location.href = "register.html";
+    try {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      usernameSpan.textContent = userDoc.exists() ? userDoc.data().name : user.email;
+    } catch {
+      usernameSpan.textContent = user.email;
+    }
+  } else {
+    window.location.href = "register.html";
+  }
 });
-window.logout = async function () {
+
+window.logout = async () => {
   await signOut(auth);
   alert("ログアウトしました");
   window.location.href = "register.html";
 };
 
-// ======================== カレンダー機能 ========================
-const monthLabel = document.getElementById("monthLabel");
+/* ========== カレンダーと予約システム ========== */
 const calendar = document.getElementById("calendar");
+const monthLabel = document.getElementById("monthLabel");
 const studioGrid = document.getElementById("studioGrid");
 const selectionSummary = document.getElementById("selectionSummary");
-
 const studios = ["A", "B", "C", "EF", "R"];
 const studioRates = { A:1100, B:1100, C:1980, EF:2310, R:2090 };
 const studioColors = { A:"#cc7b9b", B:"#7aa6c7", C:"#7fc980", EF:"#7988c7", R:"#d9c46e" };
-
 let selections = [];
-let allReservations = [];
 let selectedDate = new Date();
-const today = new Date();
 
-async function fetchReservations() {
+async function getReservations(dateStr) {
   const snapshot = await getDocs(collection(db, "reservations"));
-  return snapshot.docs.map(doc => doc.data());
+  const reserved = [];
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    if (data.date === dateStr) reserved.push(data);
+  });
+  return reserved;
 }
 
-function renderCalendar() {
+function renderCalendar(year = selectedDate.getFullYear(), month = selectedDate.getMonth()) {
   calendar.innerHTML = "";
   const headers = ["月","火","水","木","金","土","日"];
-  headers.forEach((d, i) => {
-    const h = document.createElement("div");
-    h.className = "day-header" + (i===5?" sat":i===6?" sun":"");
-    h.textContent = d;
+  headers.forEach((d,i)=>{
+    const h=document.createElement("div");
+    h.className="day-header" + (i===5?" sat":i===6?" sun":"");
+    h.textContent=d;
     calendar.appendChild(h);
   });
-  const year = selectedDate.getFullYear(), month = selectedDate.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  for (let i=0; i<(firstDay.getDay()+6)%7; i++) calendar.appendChild(document.createElement("div"));
-  for (let d=1; d<=lastDay.getDate(); d++) {
-    const date = new Date(year, month, d);
-    const div = document.createElement("div");
-    div.textContent = d;
-    div.className = "day";
-    div.onclick = () => { selectedDate = date; renderStudios(); };
+
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month+1, 0);
+  const start = (first.getDay()+6)%7;
+  monthLabel.textContent = `${year}年${month+1}月`;
+
+  for(let i=0;i<start;i++)calendar.appendChild(document.createElement("div"));
+
+  for(let d=1; d<=last.getDate(); d++){
+    const date = new Date(year,month,d);
+    const div=document.createElement("div");
+    div.textContent=d;
+    div.className="day";
+    if(date.getDay()===6)div.classList.add("sat");
+    if(date.getDay()===0)div.classList.add("sun");
+    if(date < new Date().setHours(0,0,0,0)) {
+      div.style.opacity="0.3";
+      div.style.pointerEvents="none";
+    } else {
+      div.addEventListener("click",()=>{
+        selectedDate=date;
+        renderCalendar(year,month);
+        renderStudios();
+      });
+    }
+    if(date.toDateString()===selectedDate.toDateString()) div.classList.add("selected");
     calendar.appendChild(div);
   }
-  monthLabel.textContent = `${year}年${month+1}月`;
 }
 
-function renderStudios() {
-  studioGrid.innerHTML = "";
+/* ========== スタジオ枠描画 ========== */
+async function renderStudios(){
+  studioGrid.innerHTML="";
+  const dateStr = selectedDate.toDateString();
+  const reserved = await getReservations(dateStr);
   const times = Array.from({length:15},(_,i)=>`${7+i}:00〜${8+i}:00`);
+
   studios.forEach(studio=>{
-    const col = document.createElement("div");
-    col.className = "studio-column";
-    const head = document.createElement("div");
-    head.className = `studio-header studio-${studio}`;
-    head.innerHTML = `${studio}<br>¥${studioRates[studio]}`;
+    const col=document.createElement("div");
+    col.className="studio-column";
+    const head=document.createElement("div");
+    head.className=`studio-header studio-${studio}`;
+    head.innerHTML=`${studio}<br>¥${studioRates[studio]}`;
     col.appendChild(head);
-    times.forEach(t=>{
-      const slot = document.createElement("div");
-      const dateStr = selectedDate.toDateString();
-      const booked = allReservations.some(r => r.date===dateStr && r.studio===studio && r.time===t);
-      if (booked) {
-        slot.className="timeslot booked"; slot.innerHTML=`${t}<br>✕`;
+
+    times.forEach(time=>{
+      const slot=document.createElement("div");
+      slot.className="timeslot";
+      const booked = reserved.find(r => r.studio===studio && r.time===time);
+      if(booked){
+        slot.textContent=`${time}\n✕`;
+        slot.classList.add("booked");
       } else {
-        slot.className="timeslot available";
-        slot.innerHTML=`${t}<br>〇`;
+        slot.innerHTML=`${time}<br>〇`;
+        slot.classList.add("available");
         slot.style.backgroundColor=studioColors[studio];
-        slot.onclick=()=>toggleSelect(studio,t);
+        slot.onclick=()=>toggleSelect(studio,time);
       }
+      if(selections.find(s=>s.date===dateStr&&s.studio===studio&&s.time===time)) slot.classList.add("selected");
       col.appendChild(slot);
     });
     studioGrid.appendChild(col);
   });
 }
 
+/* ========== 選択管理 ========== */
 function toggleSelect(studio,time){
-  const date=selectedDate.toDateString();
-  const i=selections.findIndex(s=>s.date===date&&s.studio===studio&&s.time===time);
-  if(i>=0)selections.splice(i,1);else selections.push({date,studio,time});
+  const dateStr=selectedDate.toDateString();
+  const key={date:dateStr,studio,time};
+  const idx=selections.findIndex(s=>s.date===key.date&&s.studio===key.studio&&s.time===key.time);
+  if(idx>=0) selections.splice(idx,1);
+  else selections.push(key);
   renderSelections();
+  renderStudios();
 }
 
 function renderSelections(){
   selectionSummary.innerHTML="";
-  selections.forEach(s=>{
+  selections.forEach(sel=>{
+    const d=new Date(sel.date);
+    const jpDay=["日","月","火","水","木","金","土"][d.getDay()];
     const div=document.createElement("div");
     div.className="selection-item";
-    div.textContent=`${s.date} ${s.studio} ${s.time}`;
+    div.style.backgroundColor=studioColors[sel.studio];
+    div.innerHTML=`
+      <div>${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}（${jpDay}）<br>
+      ${sel.time}<br>${sel.studio}　¥${studioRates[sel.studio]}</div>
+      <button onclick="removeSelection('${sel.date}','${sel.studio}','${sel.time}')">削除</button>`;
     selectionSummary.appendChild(div);
   });
   const total=selections.reduce((sum,s)=>sum+studioRates[s.studio],0);
@@ -328,41 +376,59 @@ function renderSelections(){
   selectionSummary.appendChild(totalDiv);
 }
 
-// 初期化
-window.addEventListener("load", async()=>{
-  allReservations = await fetchReservations();
-  renderCalendar();
+window.removeSelection=function(date,studio,time){
+  selections=selections.filter(s=>!(s.date===date&&s.studio===studio&&s.time===time));
+  renderSelections();
+  renderStudios();
+};
+
+/* ========== モーダル & 予約確定 ========== */
+document.querySelector(".proceed-btn").addEventListener("click",()=>{
+  document.getElementById("confirmModal").style.display="flex";
+});
+document.getElementById("closeModal").addEventListener("click",()=>{
+  document.getElementById("confirmModal").style.display="none";
+});
+document.getElementById("agreeCheck").addEventListener("change",(e)=>{
+  document.getElementById("confirmBooking").disabled=!e.target.checked;
+});
+
+document.getElementById("confirmBooking").addEventListener("click", async ()=>{
+  const user = auth.currentUser;
+  if(!user){ alert("ログインが必要です。"); return; }
+  if(selections.length===0){ alert("予約枠を選択してください。"); return; }
+
+  const invoiceName=document.getElementById("invoiceName").value.trim();
+  const remarks=document.getElementById("remarks").value.trim();
+  const payment=document.querySelector('input[name="payment"]:checked').value;
+
+  for(const s of selections){
+    const id=`${s.studio}_${s.date}_${s.time}`;
+    await setDoc(doc(db,"reservations",id),{
+      studio:s.studio,
+      date:s.date,
+      time:s.time,
+      user:user.email,
+      payment,
+      invoiceName,
+      remarks,
+      createdAt:new Date().toISOString()
+    });
+  }
+
+  alert("予約が完了しました！");
+  document.getElementById("confirmModal").style.display="none";
+  selections=[];
+  renderSelections();
   renderStudios();
 });
 
-// ===== モーダル操作 =====
-document.querySelector(".proceed-btn").onclick = ()=>document.getElementById("confirmModal").style.display="flex";
-document.getElementById("closeModal").onclick = ()=>document.getElementById("confirmModal").style.display="none";
-document.getElementById("agreeCheck").onchange = e=>document.getElementById("confirmBooking").disabled=!e.target.checked;
-
-// ===== Firestoreへの保存 =====
-document.getElementById("confirmBooking").onclick = async ()=>{
-  const user = auth.currentUser;
-  if(!user){ alert("ログインが必要です。"); return; }
-
-  const invoiceName=document.getElementById("invoiceName").value;
-  const remarks=document.getElementById("remarks").value;
-  for(const slot of selections){
-    const id=`${slot.studio}_${slot.date}_${slot.time}`;
-    await setDoc(doc(db,"reservations",id),{
-      studio:slot.studio,date:slot.date,time:slot.time,
-      userEmail:user.email,invoiceName,remarks,createdAt:new Date().toISOString()
-    });
-    // 🔸 Email送信
-    await emailjs.send("service_fm6jzqn","template_63qq8aj",{
-      user_name:user.email,user_email:user.email,
-      date:slot.date,studio:slot.studio,time:slot.time,
-      price:studioRates[slot.studio],payment:"未指定",remarks
-    });
-  }
-  alert("予約が完了しました！");
-  location.reload();
-};
+window.addEventListener("load",()=>{
+  renderCalendar();
+  renderStudios();
+});
 </script>
+
 </body>
 </html>
+
