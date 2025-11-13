@@ -344,16 +344,20 @@ async function renderStudios(){
     times.forEach(time=>{
       const slot=document.createElement("div");
       slot.className="timeslot";
-      const booked = reserved.find(r => r.studio===studio && r.time===time);
-      if(booked){
-        slot.textContent=`${time}\n✕`;
-        slot.classList.add("booked");
-      } else {
-        slot.innerHTML=`${time}<br>〇`;
-        slot.classList.add("available");
-        slot.style.backgroundColor=studioColors[studio];
-        slot.onclick=()=>toggleSelect(studio,time);
-      }
+const booked = reserved.find(r => r.studio === studio && r.time === time);
+if (booked) {
+  slot.innerHTML = `${time}<br>✕`;
+  slot.classList.add("booked");
+  slot.style.backgroundColor = "#333";  // 暗いグレーに
+  slot.style.color = "white";            // 白文字に
+  slot.style.height = "auto";            // 他の枠と高さを揃える
+  slot.style.padding = "4px 0";          // 上下中央に見せる
+} else {
+  slot.innerHTML = `${time}<br>〇`;
+  slot.classList.add("available");
+  slot.style.backgroundColor = studioColors[studio];
+  slot.onclick = () => toggleSelect(studio, time);
+}
       if(selections.find(s=>s.date===dateStr&&s.studio===studio&&s.time===time)) slot.classList.add("selected");
       col.appendChild(slot);
     });
@@ -448,5 +452,6 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
