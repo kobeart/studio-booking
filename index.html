@@ -520,7 +520,8 @@ Object.keys(grouped).forEach(dateLabel => {
   totalDiv.textContent = `合計：¥${total.toLocaleString()}（税込）`;
   selectionSummary.appendChild(totalDiv);
 }
-
+} // ← renderSelections 関数の正しい閉じカッコ
+                               
 window.removeSelection=function(date,studio,time){
   selections=selections.filter(s=>!(s.date===date&&s.studio===studio&&s.time===time));
   renderSelections();
@@ -576,6 +577,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
