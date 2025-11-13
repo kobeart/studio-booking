@@ -414,23 +414,14 @@ function renderSelections() {
       div.className = "selection-item";
       div.style.backgroundColor = studioColors[sel.studio];
       div.style.margin = "6px 0";
-      div.style.borderRadius = "8px";
+      div.style.borderRadius = "6px";
       div.style.display = "flex";
       div.style.justifyContent = "space-between";
       div.style.alignItems = "center";
-      div.style.padding = "10px 14px";
-      div.style.color = "#fff";
+      div.style.padding = "6px 10px";
+      div.style.color = "#000";
       div.style.fontWeight = "bold";
-
-      // ▼ 利用時間とスタジオ名を大きく中央寄せ
-      const info = document.createElement("div");
-      info.innerHTML = `
-        <div style="font-size: 18px; line-height: 1.2;">
-          ${sel.time}　
-          <span style="font-size: 20px;">${sel.studio}</span>
-        </div>
-        <div style="font-size: 13px; opacity: 0.8;">¥${studioRates[sel.studio].toLocaleString()}（税込）</div>
-      `;
+      div.style.fontSize = "13px";
 
       // ▼ 削除ボタン（テキストリンク風）
       const removeBtn = document.createElement("button");
@@ -519,6 +510,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
