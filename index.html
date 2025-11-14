@@ -229,6 +229,13 @@
     return emailjs.send("service_fm6jzqn", "template_63qq8aj", params);
   };
 </script>
+<!-- EmailJS SDK（必ず module の外側！！） -->
+<script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
+<script>
+(function() {
+  emailjs.init("JRZlYnM7gukOpjDw9");  /* ←ここだけ伏字にする */
+})();
+</script>
 
 <!-- Firebase ＆ カレンダー：これは module でOK -->
 <script type="module">
@@ -523,6 +530,54 @@ document.getElementById("agreeCheck").addEventListener("change",(e)=>{
   document.getElementById("confirmBooking").disabled=!e.target.checked;
 });
 
+// 🔹 「予約を確定する」ボタン — EmailJS送信処理
+document.getElementById("confirmBooking").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("ログインが必要です");
+    return;
+  }
+
+  if (selections.length === 0) {
+    alert("予約枠が選択されていません");
+    return;
+  }
+
+  // 入力項目
+  const payment = document.querySelector("input[name='payment']:checked").value;
+  const invoiceName = document.getElementById("invoiceName").value;
+  const remarks = document.getElementById("remarks").value;
+
+  // EmailJS用の予約リスト文字列
+  const summary = selections.map(s => {
+    return `${s.date} / ${s.time} / スタジオ${s.studio}：¥${studioRates[s.studio]}`;
+  }).join("\n");
+
+  try {
+    await emailjs.send(
+      "YOUR_SERVICE_ID",      // ←伏字
+      "YOUR_TEMPLATE_ID",     // ←伏字
+      {
+        to_name: user.displayName || user.email,
+        user_email: user.email,
+        reservation_list: summary,
+        payment: payment,
+        invoice_name: invoiceName,
+        remarks: remarks
+      }
+    );
+
+    alert("予約が完了しました！確認メールを送信しました。");
+
+    document.getElementById("confirmModal").style.display = "none";
+    location.reload();
+
+  } catch (err) {
+    console.error("EmailJS エラー:", err);
+    alert("メール送信に失敗しました。");
+  }
+});
+
 document.getElementById("confirmBooking").addEventListener("click", async ()=>{
   const user = auth.currentUser;
   if(!user){ alert("ログインが必要です。"); return; }
@@ -561,6 +616,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
