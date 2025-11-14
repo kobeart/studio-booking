@@ -218,24 +218,21 @@
   </div>
 </div>
 
-  <!-- EmailJS SDK -->
+<!-- EmailJS SDK（必ず module の外側） -->
 <script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
-<script>
-  // EmailJS を初期化（モジュール外）
-  emailjs.init("JRZlYnM7gukOpjDw9");
 
-  // 予約メール送信用の関数（モジュール外）
+<script>
+  // EmailJS を初期化
+  (function() {
+    emailjs.init("JRZlYnM7gukOpjDw9");  // ← Public Key
+  })();
+
+  // 予約メール送信（EmailJS 呼び出し用）
   window.sendBookingMail = async function(params) {
     return emailjs.send("service_fm6jzqn", "template_63qq8aj", params);
   };
 </script>
-<!-- EmailJS SDK（必ず module の外側！！） -->
-<script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
-<script>
-(function() {
-  emailjs.init("JRZlYnM7gukOpjDw9");  /* ←ここだけ伏字にする */
-})();
-</script>
+
 
 <!-- Firebase ＆ カレンダー：これは module でOK -->
 <script type="module">
@@ -616,6 +613,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
