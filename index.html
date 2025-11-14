@@ -405,16 +405,20 @@ function renderSelections() {
   });
 
   Object.keys(grouped).forEach(dateLabel => {
-    const dateGroup = document.createElement("div");
-    dateGroup.className = "date-group";
-    dateGroup.style.marginTop = "12px";
+  const dateGroup = document.createElement("div");
+  dateGroup.className = "date-group";
+  dateGroup.style.background = "rgba(255,255,255,0.05)";
+  dateGroup.style.padding = "10px";
+  dateGroup.style.borderRadius = "8px";
+  dateGroup.style.marginBottom = "12px";
 
-    const title = document.createElement("div");
-    title.textContent = dateLabel;
-    title.style.fontWeight = "bold";
-    title.style.color = "white";
-    title.style.marginBottom = "4px";
-    dateGroup.appendChild(title);
+  // ▼ 日付タイトル
+  const title = document.createElement("div");
+  title.textContent = dateLabel;
+  title.style.fontSize = "16px";
+  title.style.color = "#fff";
+  title.style.marginBottom = "6px";
+  dateGroup.appendChild(title);
 
     // ▼ その日のスタジオ予約一覧
     grouped[dateLabel].forEach(sel => {
@@ -524,6 +528,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
