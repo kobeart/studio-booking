@@ -218,41 +218,39 @@
   </div>
 </div>
 
-<!-- EmailJS SDK（必ず module の外側） -->
+<!-- EmailJS SDK（最優先で読み込む） -->
 <script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
 
 <script>
-  // EmailJS を初期化
-  (function() {
-    emailjs.init("JRZlYnM7gukOpjDw9");  // ← Public Key
-  })();
+  // EmailJS を初期化（必ず SDK のあと）
+  emailjs.init("JRZlYnM7gukOpjDw9");
 
-  // 予約メール送信（EmailJS 呼び出し用）
+  // グローバル関数として送信関数を定義
   window.sendBookingMail = async function(params) {
     return emailjs.send("service_fm6jzqn", "template_63qq8aj", params);
   };
 </script>
 
-
 <!-- Firebase ＆ カレンダー：これは module でOK -->
 <script type="module">
-  import { ... } from "...firebase...";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  document.getElementById("confirmBooking").addEventListener("click", async () => {
+document.getElementById("confirmBooking").addEventListener("click", async () => {
 
-    const params = {
-      user_name: user.displayName || user.email,
-      user_email: user.email,
-      date: slot.date,
-      studio: slot.studio,
-      time: slot.time,
-      price: studioRates[slot.studio],
-    };
+  const params = {
+    user_name: user.displayName || user.email,
+    user_email: user.email,
+    date: slot.date,
+    studio: slot.studio,
+    time: slot.time,
+    price: studioRates[slot.studio],
+  };
 
-    // ← EmailJS を呼ぶ（window 経由でグローバル関数）
-    await window.sendBookingMail(params);
-
-  });
+  // EmailJS 発火
+  await window.sendBookingMail(params);
+});
 </script>
 
 
@@ -613,6 +611,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
