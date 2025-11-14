@@ -407,10 +407,12 @@ function renderSelections() {
   Object.keys(grouped).forEach(dateLabel => {
   const dateGroup = document.createElement("div");
   dateGroup.className = "date-group";
-  dateGroup.style.background = "rgba(255,255,255,0.05)";
-  dateGroup.style.padding = "10px";
+  dateGroup.style.background = "#0a1a2f";       // ページ背景色と同じ
+  dateGroup.style.padding = "10px 5px";
   dateGroup.style.borderRadius = "8px";
-  dateGroup.style.marginBottom = "12px";
+  dateGroup.style.marginBottom = "14px";
+  dateGroup.style.border = "1px solid rgba(255,255,255,0.12)"; // うっすら境界線
+
 
   // ▼ 日付タイトル
   const title = document.createElement("div");
@@ -528,6 +530,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
