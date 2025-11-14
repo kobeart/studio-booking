@@ -388,7 +388,7 @@
   let displayYear = today.getFullYear();
   let displayMonth = today.getMonth();
   const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
-  const maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 0);
+  const maxDate = new Date(today.getFullYear(), today.getMonth() + 7, 0);
 
   // ===== Auth: ユーザー名表示 / セッションチェック =====
   onAuthStateChanged(auth, async (user) => {
@@ -779,3 +779,4 @@
 </script>
 </body>
 </html>
+
