@@ -187,7 +187,7 @@
 </header>
 
 <div class="instructions">
-  カレンダーから日付を選び、各スタジオの利用時間を選択してください。全ての選択が終わったら「予約へ進む」をクリックしてください。
+  カレンダーから日付を選び各スタジオの利用時間を選択してください。選択したご利用内容がページ下部に表示されます。全ての選択が終わったら「予約へ進む」をクリックしてください。毎月1日の午前9時に、その月から6ヶ月先の予約が可能になります。前日や当日のご予約については、お手数ですが予約後に必ずお電話（0782417477）でのご連絡をお願いします。 　
 </div>
 
 <div class="calendar-controls">
@@ -378,22 +378,7 @@ function toggleSelect(studio,time){
 
 function renderSelections() {
   selectionSummary.innerHTML = "";
-  
-  // ▼ 注意文言（必ず最初に表示）
-  const notice = document.createElement("div");
-  notice.style.padding = "10px 12px";
-  notice.style.marginBottom = "10px";
-  notice.style.borderRadius = "6px";
-  notice.style.color = "#fff";
-  notice.style.fontSize = "14px";
-  notice.style.fontWeight = "bold";
-  notice.innerHTML = `
-    <b>直近のご予約について</b><br>
-    前日や当日のご予約については、お手数ですが予約後に<br>
-    <strong>必ずお電話（0782417477）</strong>でご連絡ください。
-　 `;
-  selectionSummary.appendChild(notice);
-    
+      
   // ▼ 「選択中」見出しを動的に表示
   let heading = document.getElementById("selectionHeading");
   if (!heading) {
@@ -539,6 +524,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
