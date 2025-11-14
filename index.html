@@ -379,19 +379,26 @@ function toggleSelect(studio,time){
 function renderSelections() {
   selectionSummary.innerHTML = "";
       
-  // ▼ 「選択中」見出しを動的に表示
+    // ▼ 「選択中」見出しを selection-summary 内に配置
   let heading = document.getElementById("selectionHeading");
+
   if (!heading) {
     heading = document.createElement("h2");
     heading.id = "selectionHeading";
     heading.textContent = "選択中";
     heading.style.textAlign = "left";
     heading.style.color = "white";
-    heading.style.marginTop = "30px";
+    heading.style.fontSize = "20px";
+    heading.style.margin = "0 0 12px 0";
     heading.style.display = "none";
-    selectionSummary.parentNode.insertBefore(heading, selectionSummary);
+
+    // 🔥 内部先頭に追加（←これが正しい）
+    selectionSummary.prepend(heading);
   }
+
+  // ▼ 表示／非表示の切り替え
   heading.style.display = selections.length > 0 ? "block" : "none";
+
 
   // ▼ 日付ごとにグループ化
   const grouped = {};
@@ -527,6 +534,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
