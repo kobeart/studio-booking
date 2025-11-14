@@ -198,9 +198,7 @@
 
 <div class="calendar" id="calendar"></div>
 <div class="studio-grid" id="studioGrid"></div>
-<div class="selection-summary" id="selectionSummary">
-  <div class="total">合計：¥0（税込）</div>
-</div>
+
 <button class="proceed-btn">予約へ進む</button>
 
 <!-- モーダル -->
@@ -379,19 +377,24 @@ function toggleSelect(studio,time){
 function renderSelections() {
   selectionSummary.innerHTML = "";
       
-  // ▼ 「選択中」見出しを動的に表示
-  let heading = document.getElementById("selectionHeading");
-  if (!heading) {
-    heading = document.createElement("h2");
-    heading.id = "selectionHeading";
-    heading.textContent = "選択中";
-    heading.style.textAlign = "left";
-    heading.style.color = "white";
-    heading.style.marginTop = "30px";
-    heading.style.display = "none";
-    selectionSummary.parentNode.insertBefore(heading, selectionSummary);
-  }
-  heading.style.display = selections.length > 0 ? "block" : "none";
+// ▼ 「選択中」見出しを動的に表示
+let heading = document.getElementById("selectionHeading");
+
+if (!heading) {
+  heading = document.createElement("h2");
+  heading.id = "selectionHeading";
+  heading.textContent = "選択中";
+  heading.style.textAlign = "left";
+  heading.style.color = "white";
+  heading.style.margin = "0 0 10px 0";
+  heading.style.display = "none";
+
+  // ★ selectionSummary の中の一番先頭に挿入
+  selectionSummary.prepend(heading);
+}
+
+// 表示・非表示の切り替え
+heading.style.display = selections.length > 0 ? "block" : "none";
 
   // ▼ 日付ごとにグループ化
   const grouped = {};
@@ -527,6 +530,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
