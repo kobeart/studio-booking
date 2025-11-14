@@ -378,7 +378,22 @@ function toggleSelect(studio,time){
 
 function renderSelections() {
   selectionSummary.innerHTML = "";
-
+  
+  // ▼ 注意文言（必ず最初に表示）
+  const notice = document.createElement("div");
+  notice.style.background = "#ffe8a3";
+  notice.style.border = "1px solid #e0c060";
+  notice.style.padding = "10px 12px";
+  notice.style.marginBottom = "10px";
+  notice.style.borderRadius = "6px";
+  notice.style.color = "#7a5b00";
+  notice.style.fontSize = "14px";
+  notice.style.fontWeight = "bold";
+  notice.innerHTML = `
+    ⚠ <b>直近のご予約について</b><br>
+    当日および翌日のご予約は、スタッフ対応が間に合わない場合があります。<br>
+    大変お手数ですが、予約後に<strong>必ずお電話（0782417477）</strong>までご連絡ください。
+    
   // ▼ 「選択中」見出しを動的に表示
   let heading = document.getElementById("selectionHeading");
   if (!heading) {
@@ -524,6 +539,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
