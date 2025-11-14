@@ -219,15 +219,19 @@
 </div>
 
 <!-- EmailJS SDK（最優先で読み込む） -->
+<!-- EmailJS SDK（必ず module の外側）-->
 <script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
 
 <script>
-  // EmailJS を初期化（必ず SDK のあと）
-  emailjs.init("JRZlYnM7gukOpjDw9");
+  // EmailJS 初期化
+  (function() {
+    emailjs.init("JRZlYnM7gukOpjDw9");  // ←伏字にする部分
+  })();
 
-  // グローバル関数として送信関数を定義
+  // EmailJS 送信用のグローバル関数
   window.sendBookingMail = async function(params) {
-    return emailjs.send("service_fm6jzqn", "template_63qq8aj", params);
+    return emailjs.send("service_fm6jzqn", "template_63qq8aj", params);  
+    // ↑ あなたの Service ID / Template ID に置き換える
   };
 </script>
 
@@ -611,6 +615,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
