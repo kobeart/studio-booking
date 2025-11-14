@@ -141,13 +141,6 @@
     box-shadow: 0 0 15px rgba(255,255,255,0.9), 0 0 25px rgba(255,255,255,0.6);
   }
 }
-
-/* ▼ 日付ブロック Hover 光エフェクト */
-.date-group:hover {
-  box-shadow: 0 0 14px rgba(255,255,255,0.25);
-  transition: box-shadow 0.25s ease-in-out;
-}
-
   
   .selection-summary {
     max-width: 600px;
@@ -417,7 +410,6 @@ dateGroup.className = "date-group";
 dateGroup.style.padding = "10px 5px";
 dateGroup.style.borderRadius = "8px";
 dateGroup.style.marginBottom = "14px";
-dateGroup.classList.add("date-group");
 
   // ▼ 日付タイトル
   const title = document.createElement("div");
@@ -535,6 +527,7 @@ window.addEventListener("load",()=>{
 
 </body>
 </html>
+
 
 
 
