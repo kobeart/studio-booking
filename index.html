@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>神戸芸術センター・スタジオWEB予約</title>
 <style>
-  /* --- 省略しないでそのまま動くスタイル --- */
+  /* --- スタイルシート --- */
   body {
     font-family: "Helvetica Neue", Arial, sans-serif;
     background-color: #0a1a2f;
@@ -300,12 +300,12 @@
 <!-- EmailJS SDK（必ず module の外） -->
 <script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
 <script>
-  // EmailJS 初期化
+  // EmailJS 初期化（伏字のままです）
   (function(){
     emailjs.init("JRZlYnM7gukOpjDw9");
   })();
 
-  // EmailJS 送信用のグローバル関数
+  // EmailJS 送信用のグローバル関数（Service/Template は伏字）
   window.sendBookingMail = async function(params) {
     return emailjs.send("SERVICE_fm6jzqn", "TEMPLATE_63qq8aj", params);
   };
@@ -395,14 +395,15 @@
     appId: "1:485178815055:web:f91792229f8c359cf1303a",
     measurementId: "G-EF147DP6ZB"
   };
+  
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // ===== ログイン状態チェック =====
+  // ===== ログイン状態チェック (リダイレクト無効化済み) =====
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      // window.location.href = "login.html";
+      // window.location.href = "login.html"; // リダイレクトを無効化
     } else {
       document.getElementById("username").textContent = user.displayName || user.email;
     }
@@ -410,12 +411,14 @@
 
   window.logout = async function(){
     await signOut(auth);
-    // window.location.href = "login.html";
+    // window.location.href = "login.html"; // リダイレクトを無効化
   };
 
-  // ===== カレンダー =====
-// ===== カレンダー =====
-// ... (中略) ...
+  // ===== カレンダー要素の取得 =====
+  const calendar = document.getElementById("calendar");
+  const monthLabel = document.getElementById("monthLabel");
+  const studioGrid = document.getElementById("studioGrid");
+  const selectionSummary = document.getElementById("selectionSummary");
 
   // 現在時刻を常に+9時間(日本時間)として扱うためのオフセット関数
   function getOffsetDate() {
@@ -428,6 +431,7 @@
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
   let selections = [];
+  let selectedDate = new Date(today); // 初期選択日を今日に設定
 
   const studios = ["A","B","C","EF","R"];
   const HOURS = [9,10,11,12,13,14,15,16,17,18,19,20,21];
@@ -498,8 +502,20 @@
         if (dow === 6) dayDiv.classList.add("sat");
         if (dow === 0) dayDiv.classList.add("sun");
 
-        // ... (以下、日付クリック時の処理など) ...
-        // ... (省略) ...
+        // 選択がある日付にマーカーを付ける
+        const dateStr = formatDate(date);
+        const hasSelection = selections.some(s => s.date === dateStr);
+        if (hasSelection) {
+          dayDiv.classList.add("has-selection");
+        }
+
+        // 日付クリックイベントの再設定
+        dayDiv.addEventListener("click", () => {
+          document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
+          dayDiv.classList.add("selected");
+          selectedDate = date;
+          renderStudios();
+        });
       }
       calendar.appendChild(dayDiv);
     }
@@ -512,17 +528,7 @@
     document.getElementById("nextMonth").disabled = (currentMonthStart >= maxMonth);
   }
 
-  // initial render
-  window.addEventListener("load", () => {
-    selectedDate = new Date(today);
-    renderCalendar();
-    renderStudios();
-    renderSelections();
-  });
-
-
   // ===== 日付・スタジオの描画 =====
-  let selectedDate = new Date(today);
   function renderStudios(){
     studioGrid.innerHTML = "";
     const times = HOURS.map(h => `${h}:00〜${h+1}:00`);
@@ -541,9 +547,9 @@
         slot.className = "timeslot";
         slot.dataset.studio = studio;
         slot.dataset.hour = hour;
-        // initial content
+        // initial content (明るい〇で初期化)
         slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span style="opacity:0.9">〇</span></div>`;
-        slot.style.backgroundColor = studioColors[studio] + "44"; // より明るく
+        slot.style.backgroundColor = studioColors[studio] + "44"; // 明るい値に設定
         // click behavior
         slot.addEventListener("click", () => {
           // if already booked, do nothing
@@ -811,7 +817,8 @@
 
   // initial render
   window.addEventListener("load", () => {
-    selectedDate = new Date(today);
+    // selectedDateは既に初期化済み
+    // selectedDate = new Date(today); // 不要
     renderCalendar();
     renderStudios();
     renderSelections();
