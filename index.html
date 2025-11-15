@@ -418,7 +418,7 @@
   // ===== ログイン状態チェック =====
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     } else {
       document.getElementById("username").textContent = user.displayName || user.email;
     }
@@ -830,3 +830,4 @@
 </script>
 </body>
 </html>
+
