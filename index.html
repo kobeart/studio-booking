@@ -183,7 +183,7 @@
 
   .timeslot.booked {
     background-color: rgba(64,64,64,0.9);
-    color:#fff;
+    color:#ddd;
     cursor: not-allowed;
   }
   .timeslot.selected {
@@ -546,7 +546,7 @@
         slot.dataset.hour = hour;
         // initial content (明るい〇で初期化)
         slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span style="opacity:0.9">〇</span></div>`;
-        slot.style.backgroundColor = studioColors[studio]; // 明るい値に設定
+
         // click behavior
         slot.addEventListener("click", () => {
           // if already booked, do nothing
@@ -566,6 +566,10 @@
         });
 
         col.appendChild(slot);
+        requestAnimationFrame(() => {
+        slot.style.backgroundColor = studioColors[studio];
+        });
+
       });
 
       studioGrid.appendChild(col);
@@ -826,6 +830,7 @@
 </script>
 </body>
 </html>
+
 
 
 
