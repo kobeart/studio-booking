@@ -526,103 +526,104 @@
   }
 
   // ===== 日付・スタジオの描画 =====
-  function renderStudios(){
-    studioGrid.innerHTML = "";
-    const times = HOURS.map(h => `${h}:00〜${h+1}:00`);
-    studios.forEach(studio => {
-      const col = document.createElement("div");
-      col.className = "studio-column";
-      const head = document.createElement("div");
-      head.className = `studio-header studio-${studio}`;
-      head.innerHTML = `${studio}<br>¥${studioRates[studio]}`;
-      col.appendChild(head);
+function renderStudios() {
+  // 選択している日付が無ければ処理中断（安全策）
+  if (!selectedDate) return;
 
-      // For each time slot we need to check Firestore whether it's reserved for selectedDate
-      times.forEach((timeStr, idx) => {
-        const hour = HOURS[idx];
-        const slot = document.createElement("div");
-        slot.className = "timeslot";
-        slot.dataset.studio = studio;
-        slot.dataset.hour = hour;
-        // initial content (明るい〇で初期化)
-        slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span style="opacity:0.9">〇</span></div>`;
+  // 例: selectedDate が Date オブジェクト → 表示用日付文字列
+  const dateStr = selectedDate.toDateString();
 
-        // click behavior
+  // ここで reservations（予約済データ）を使っているなら事前に取得しておく想定
+  // const reserved = ...;
+
+  // 新しいコンテナを DocumentFragment に作る（描画は最後に一回だけ）
+  const frag = document.createDocumentFragment();
+
+  const times = Array.from({ length: 15 }, (_, i) => {
+    const h = 7 + i;
+    return `${String(h).padStart(2, '0')}:00〜${String(h+1).padStart(2,'0')}:00`;
+  });
+
+  studios.forEach(studio => {
+    const col = document.createElement("div");
+    col.className = "studio-column";
+
+    const head = document.createElement("div");
+    head.className = `studio-header studio-${studio}`;
+    head.innerHTML = `${studio}<br>¥${studioRates[studio]}`;
+    // 明示的にスタジオカラーをヘッダにも反映（必要なら）
+    head.style.backgroundColor = studioColors[studio];
+    frag.appendChild(col);
+    col.appendChild(head);
+
+    times.forEach((timeStr, idx) => {
+      const hour = 7 + idx;
+      const slot = document.createElement("div");
+      slot.className = "timeslot";
+
+      // 初期コンテンツ（〇表記）
+      slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span style="opacity:0.95">〇</span></div>`;
+
+      // ここで予約済判定が可能なら isBooked を判定してクラス付与
+      // const isBooked = reserved && reserved.some(r => r.date === dateStr && r.studio === studio && r.hour === hour);
+      const isBooked = false; // いまは未実装なら false
+
+      if (isBooked) {
+        slot.classList.add("booked");
+        slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span>✕</span></div>`;
+        slot.style.backgroundColor = "rgba(64,64,64,0.9)";
+        slot.style.color = "#ddd";
+      } else {
+        slot.classList.add("available");
+        // 即座に背景色をつけても Fragment 内なので描画フリッカーが起きない
+        slot.style.backgroundColor = studioColors[studio];
+        slot.style.color = (/* 判読性 */ getContrastColor(studioColors[studio]) === 'dark') ? '#000' : '#000';
+        // クリック処理
         slot.addEventListener("click", () => {
-          // if already booked, do nothing
           if (slot.classList.contains("booked")) return;
-          // toggle selection
-          const dateStr = formatDate(selectedDate);
-          const existsIndex = selections.findIndex(s => s.date === dateStr && s.studio === studio && s.hour === hour);
+          const dateKey = selectedDate.toDateString();
+          const existsIndex = selections.findIndex(s => s.date === dateKey && s.studio === studio && s.hour === hour);
           if (existsIndex >= 0) {
-            selections.splice(existsIndex,1);
+            selections.splice(existsIndex, 1);
             slot.classList.remove("selected");
           } else {
-            selections.push({ date: dateStr, time: timeStr, studio, hour });
+            selections.push({ date: dateKey, time: timeStr, studio, hour });
             slot.classList.add("selected");
           }
           renderSelections();
           updateCalendarMarkers();
         });
+      }
 
-        col.appendChild(slot);
-        requestAnimationFrame(() => {
-        slot.style.backgroundColor = studioColors[studio];
-        });
+      // 選択済みチェック（既に selections にあれば selected をつける）
+      const dateKey = selectedDate.toDateString();
+      if (selections.find(s => s.date === dateKey && s.studio === studio && s.hour === hour)) {
+        slot.classList.add("selected");
+      }
 
-      });
-
-      studioGrid.appendChild(col);
+      col.appendChild(slot);
     });
 
-    // After drawing all slots, update booked marks (async)
-    markBookedSlotsForSelectedDate();
-  }
+    frag.appendChild(col);
+  });
 
-  // mark bookedSlots by querying Firestore for selectedDate
-  async function markBookedSlotsForSelectedDate(){
-    try {
-      // early exit if no selectedDate
-      if (!selectedDate) return;
-      const dateStr = formatDate(selectedDate);
-      // Iterate DOM slots and check Firestore per slot (simple approach)
-      const slotEls = studioGrid.querySelectorAll(".studio-column");
-      for (let ci=0; ci<slotEls.length; ci++){
-        const col = slotEls[ci];
-        const studio = studios[ci];
-        const slots = col.querySelectorAll(".timeslot");
-        for (let si=0; si<slots.length; si++){
-          const hour = HOURS[si];
-          const id = `${studio}_${dateStr}_${hour}`;
-          try {
-            const snap = await getDoc(doc(db, "reservations", id));
-            const slotEl = slots[si];
-            if (snap.exists()) {
-              slotEl.classList.add("booked");
-              slotEl.innerHTML = `<div style="text-align:center;">${HOURS[si]}:00〜${HOURS[si]+1}:00<br><span style="opacity:0.9">✕</span></div>`;
-              slotEl.style.backgroundColor = "rgba(64,64,64,0.9)";
-            } else {
-              // if selected, show selected style
-              const dateStrSel = formatDate(selectedDate);
-              const isSelected = selections.some(s => s.date===dateStrSel && s.studio===studio && s.hour===hour);
-              const slotEl = slots[si];
-              if (isSelected) slotEl.classList.add("selected");
-              else slotEl.classList.remove("selected");
-              // ensure available mark
-              if (!slotEl.classList.contains("booked")) {
-                slotEl.innerHTML = `<div style="text-align:center;">${HOURS[si]}:00〜${HOURS[si]+1}:00<br><span style="opacity:0.9">〇</span></div>`;
-                slotEl.style.backgroundColor = studioColors[studio] + "44";
-              }
-            }
-          } catch(e) {
-            console.error("slot check error", e);
-          }
-        }
-      }
-    } catch(e) {
-      console.error("markBookedSlotsForSelectedDate error", e);
-    }
-  }
+  // まとめて差し替え（ここで初めて描画に反映される）
+  studioGrid.innerHTML = "";
+  studioGrid.appendChild(frag);
+}
+
+// 補助：カラー文字色のコントラストを返す（簡易）
+function getContrastColor(hex) {
+  // hex は "#rrggbb"
+  if (!hex || hex[0] !== '#') return 'dark';
+  const r = parseInt(hex.substr(1,2),16);
+  const g = parseInt(hex.substr(3,2),16);
+  const b = parseInt(hex.substr(5,2),16);
+  // YIQ
+  const yiq = (r*299 + g*587 + b*114) / 1000;
+  return yiq >= 128 ? 'light' : 'dark';
+}
+
 
   function formatDate(dt){
     return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
@@ -830,6 +831,7 @@
 </script>
 </body>
 </html>
+
 
 
 
