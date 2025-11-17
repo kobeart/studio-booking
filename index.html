@@ -143,14 +143,20 @@
       box-shadow: 0 0 28px rgba(255,255,255,0.6), 0 0 24px rgba(255,255,255,0.35);
     }
   }
-.day.has-selection {
-  background: rgba(255,255,255,0.15);
+/* ▼ 選択中の日を光らせる（アニメーション付き） */
+.day.selected {
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 6px;
-  box-shadow: 0 0 8px rgba(255,255,255,0.4),
-              0 0 15px rgba(255,255,255,0.2);
-  animation: dayGlow 2s infinite alternate;
-  transition: background 0.2s ease;
+  animation: glowPulse 1.8s ease-in-out infinite;
+  transition: background 0.3s ease;
 }
+
+@keyframes glowPulse {
+  0%   { background: rgba(255,255,255,0.10); }
+  50%  { background: rgba(255,255,255,0.22); }
+  100% { background: rgba(255,255,255,0.10); }
+}
+
   .studio-grid {
     display: flex;
     justify-content: center;
@@ -641,22 +647,27 @@ function getContrastColor(hex) {
   }
 
   // カレンダーのマーカーを更新
-  function updateCalendarMarkers(){
-    const dayDivs = calendar.querySelectorAll(".day");
-    dayDivs.forEach(dayDiv => {
-      if (dayDiv.textContent.trim() === "") return;
-      const dayNum = parseInt(dayDiv.textContent);
-      if (isNaN(dayNum)) return;
-      const date = new Date(currentYear, currentMonth, dayNum);
-      const dateStr = formatDate(date);
-      const hasSelection = selections.some(s => s.date === dateStr);
-      if (hasSelection) {
-        dayDiv.classList.add("has-selection");
-      } else {
-        dayDiv.classList.remove("has-selection");
-      }
-    });
-  }
+ function updateCalendarMarkers() {
+  const dayDivs = calendar.querySelectorAll(".day");
+
+  dayDivs.forEach(dayDiv => {
+    if (dayDiv.textContent.trim() === "") return;
+
+    const dayNum = parseInt(dayDiv.textContent);
+    if (isNaN(dayNum)) return;
+
+    const date = new Date(currentYear, currentMonth, dayNum);
+    const dateStr = formatDate(date);
+
+    const hasSelection = selections.some(s => s.date === dateStr);
+
+    if (hasSelection) {
+      dayDiv.classList.add("selected");   // ← 光るクラス
+    } else {
+      dayDiv.classList.remove("selected");
+    }
+  });
+}
 
   // ===== 選択リストの描画 =====
   function renderSelections(){
@@ -865,6 +876,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
