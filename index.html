@@ -687,7 +687,29 @@ function getContrastColor(hex) {
         // info
         const info = document.createElement("div");
         info.className = "info";
-        info.innerHTML = `${sel.time}　B<br>¥${studioRates[sel.studio].toLocaleString()}`.replace("B", sel.studio);
+
+// ▼ 日本語の日付を作る
+const d2 = new Date(sel.date);
+const jpDay2 = ["日","月","火","水","木","金","土"][d2.getDay()];
+const dateLabel2 = `${d2.getFullYear()}年${d2.getMonth()+1}月${d2.getDate()}日（${jpDay2}）`;
+
+// ▼ スタジオ名を「スタジオB」形式に
+const studioLabel = `スタジオ${sel.studio}`;
+
+// ▼ 情報表示（大きい白文字＋税込表示）
+info.innerHTML = `
+  <div style="font-size: 20px; line-height: 1.2; color: #fff;">
+    ${sel.time}　
+    <span style="font-size: 20px;">${studioLabel}</span>
+  </div>
+  <div style="font-size: 13px; opacity: 0.9; color: #0a1a2f;">
+    ¥${studioRates[sel.studio].toLocaleString()}（税込）
+  </div>
+  <div style="font-size: 12px; opacity: 0.7; margin-top: 4px; color: #fff;">
+    ${dateLabel2}
+  </div>
+`;
+     
         div.appendChild(info);
         // delete link
         const btn = document.createElement("button");
@@ -832,6 +854,7 @@ function getContrastColor(hex) {
 </script>
 </body>
 </html>
+
 
 
 
