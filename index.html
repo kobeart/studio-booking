@@ -684,6 +684,7 @@ function getContrastColor(hex) {
       title.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${jp}）`;
       // ▼ 日付表記のマージン設定
       title.style.margin = "8px 0 6px 12px";
+      title.style.letterSpacing = "1px";
       dateGroup.appendChild(title);
       grouped[dateKey].forEach(sel => {
         const div = document.createElement("div");
@@ -856,6 +857,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
