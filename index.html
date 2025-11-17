@@ -257,6 +257,7 @@
     color:#fff;
     font-weight:bold;
     margin-top:20px;
+    margin-right:20px;
     padding-top: 12px;
     border-top: 1px solid rgba(255,255,255,0.2);
   }
@@ -659,7 +660,7 @@ function getContrastColor(hex) {
       heading.textContent = "選択中";
       heading.style.textAlign = "left";
       heading.style.color = "white";
-      heading.style.margin = "0 0 6px 12px";
+      heading.style.margin = "0 0 6px 16px";
       selectionSummary.appendChild(heading);
     }
 
@@ -705,7 +706,7 @@ info.innerHTML = `
     <span style="font-size: 20px;">${studioLabel}</span>
   </div>
   <div style="font-size: 13px; opacity: 0.9; color: #0a1a2f;">
-    ¥${studioRates[sel.studio].toLocaleString()}（税込）
+    ¥${studioRates[sel.studio].toLocaleString()}
   </div>
 `;
      
@@ -853,6 +854,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
