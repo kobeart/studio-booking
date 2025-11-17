@@ -174,7 +174,6 @@
     padding: 8px 6px;
     font-color: #0a1a2f;
     font-size: 13px;
-    font-style: bold;
     cursor: pointer;
     display:flex;
     align-items:center;
@@ -562,10 +561,13 @@ function renderStudios() {
       const hour = 7 + idx;
       const slot = document.createElement("div");
       slot.className = "timeslot";
-
       // 初期コンテンツ（〇表記）
-      slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span style="opacity:0.95">〇</span></div>`;
-
+     slot.innerHTML = `
+     <div style="text-align:center;">
+     <span style="font-weight: bold;">${timeStr}</span><br>
+     <span style="opacity:0.9">〇</span>
+     </div>
+     `;
       // ここで予約済判定が可能なら isBooked を判定してクラス付与
       // const isBooked = reserved && reserved.some(r => r.date === dateStr && r.studio === studio && r.hour === hour);
       const isBooked = false; // いまは未実装なら false
@@ -856,6 +858,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
