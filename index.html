@@ -220,7 +220,6 @@
     align-items:center;
     border-radius:12px;
     margin-bottom:12px;
-    margin-left:36px;
     padding:14px 24px;
     color:#fff;
   }
@@ -680,6 +679,7 @@ function getContrastColor(hex) {
       title.className = "date-title";
       // ▼ 日本語表記にする
       title.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${jp}）`;
+      title.style.margin = "8px 0 6px 12px";
       dateGroup.appendChild(title);
       grouped[dateKey].forEach(sel => {
         const div = document.createElement("div");
@@ -852,6 +852,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
