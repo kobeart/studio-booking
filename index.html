@@ -670,8 +670,9 @@ function getContrastColor(hex) {
       if (!grouped[s.date]) grouped[s.date] = [];
       grouped[s.date].push(s);
     });
-
-    Object.keys(grouped).sort().forEach(dateKey => {
+    Object.keys(grouped)
+  .sort((a, b) => new Date(a) - new Date(b))   // ← 追加・修正ポイント
+  .forEach(dateKey => {
       const dateGroup = document.createElement("div");
       dateGroup.className = "date-group";
       const title = document.createElement("div");
@@ -854,6 +855,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
