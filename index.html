@@ -698,14 +698,14 @@ const studioLabel = `スタジオ${sel.studio}`;
 
 // ▼ 情報表示（大きい白文字＋税込表示）
 info.innerHTML = `
-  <div style="font-size: 20px; line-height: 1.2; color: #fff;">
+  <div style="font-size: 20px; line-height: 1.2; color: #0a1a2f;">
     ${sel.time}　
     <span style="font-size: 20px;">${studioLabel}</span>
   </div>
   <div style="font-size: 13px; opacity: 0.9; color: #0a1a2f;">
     ¥${studioRates[sel.studio].toLocaleString()}（税込）
   </div>
-  <div style="font-size: 12px; opacity: 0.7; margin-top: 4px; color: #fff;">
+  <div style="font-size: 12px; opacity: 0.7; margin-top: 4px; color: #0a1a2f;">
     ${dateLabel2}
   </div>
 `;
@@ -854,6 +854,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
