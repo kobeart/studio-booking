@@ -730,7 +730,7 @@ info.innerHTML = `
     const total = selections.reduce((s,x)=> s + Number(studioRates[x.studio]), 0);
     const totalDiv = document.createElement("div");
     totalDiv.className = "total";
-    totalDiv.textContent = `合計:¥${total.toLocaleString()}(税込)`;
+    totalDiv.textContent = `合計:¥${total.toLocaleString()}（税込）`;
     selectionSummary.appendChild(totalDiv);
   }
 
@@ -856,6 +856,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
