@@ -227,7 +227,7 @@
     text-align:left;
     flex: 1;
     font-size:18px;
-    margin-left: 12px;
+    margin-left: 6px;
     line-height:1.3;
     font-weight:600;
     color: #0a1a2f;
@@ -662,7 +662,7 @@ function getContrastColor(hex) {
       heading.style.textAlign = "left";
       heading.style.color = "white";
       heading.style.margin = "0 0 6px 16px";
-      heading.style.letterSpacing = "3px";
+      heading.style.letterSpacing = "2px";
       selectionSummary.appendChild(heading);
     }
 
@@ -702,7 +702,7 @@ const dateLabel2 = `${d2.getFullYear()}年${d2.getMonth()+1}月${d2.getDate()}�
 // ▼ スタジオ名を「スタジオB」形式に
 const studioLabel = `スタジオ${sel.studio}`;
 
-// ▼ 情報表示（大きい白文字＋税込表示）
+// ▼ 情報表示（利用時間・利用スタジオ）
 info.innerHTML = `
   <div style="font-size: 20px; line-height: 1.2; color: #0a1a2f;">
     ${sel.time}　
@@ -857,6 +857,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
