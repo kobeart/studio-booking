@@ -493,6 +493,13 @@
     renderCalendar();
   });
 
+  // 共通で使う日付フォーマット（ゼロ埋め）
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function formatDate(date){
+  // date は Date オブジェクトを想定
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
+  }
+  
   function renderCalendar() {
   calendar.innerHTML = "";
   const monthNames = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
@@ -667,15 +674,23 @@ function getContrastColor(hex) {
   }
 
   // カレンダーのマーカーを更新
-function updateCalendarMarkers(){
+// ★ 日付の光りマーカーを更新（複数選択に対応）
+function updateCalendarMarkers() {
   const dayDivs = calendar.querySelectorAll(".day");
+
   dayDivs.forEach(dayDiv => {
-    if (dayDiv.textContent.trim() === "") return;
-    const dayNum = parseInt(dayDiv.textContent);
+    const text = dayDiv.textContent.trim();
+    if (text === "") return;
+
+    const dayNum = parseInt(text);
     if (isNaN(dayNum)) return;
+
     const date = new Date(currentYear, currentMonth, dayNum);
     const dateStr = formatDate(date);
+
     const hasSelection = selections.some(s => s.date === dateStr);
+
+    // ▼ 予約が入っている日 → 光る（has-selection）
     if (hasSelection) {
       dayDiv.classList.add("has-selection");
     } else {
@@ -891,6 +906,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
