@@ -551,6 +551,7 @@
 
   document.getElementById("prevMonth").disabled = (currentMonthStart <= todayStart);
   document.getElementById("nextMonth").disabled = (currentMonthStart >= maxMonth);
+  updateCalendarMarkers(); // ← 月描画後に再適用（必須）
 }
 
 
@@ -886,6 +887,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
