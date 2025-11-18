@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>神戸芸術センター・スタジオWEB予約</title>
 <style>
-  /* --- 省略しないでそのまま動くスタイル --- */
+  /* --- スタイルシート --- */
   body {
     font-family: "Helvetica Neue", Arial, sans-serif;
     background-color: #0a1a2f;
@@ -144,7 +143,32 @@
       box-shadow: 0 0 28px rgba(255,255,255,0.6), 0 0 24px rgba(255,255,255,0.35);
     }
   }
+/* ▼ 選択中の日を光らせる（アニメーション付き） */
+.day.selected {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  animation: glowPulse 1.8s ease-in-out infinite;
+  transition: background 0.3s ease;
+}
 
+@keyframes glowPulse {
+  0%   { background: rgba(255,255,255,0.10); }
+  50%  { background: rgba(255,255,255,0.22); }
+  100% { background: rgba(255,255,255,0.10); }
+}
+
+.day.has-selection {
+  background: rgba(255,255,255,0.18);
+  border-radius: 6px;
+  animation: glowDay 1.8s ease-in-out infinite;
+}
+
+@keyframes glowDay {
+  0%   { background: rgba(255,255,255,0.10); }
+  50%  { background: rgba(255,255,255,0.25); }
+  100% { background: rgba(255,255,255,0.10); }
+}
+  
   .studio-grid {
     display: flex;
     justify-content: center;
@@ -173,8 +197,8 @@
     border-radius: 6px;
     margin: 6px 0;
     padding: 8px 6px;
+    font-color: #0a1a2f;
     font-size: 13px;
-    color: #0a1a2f;
     cursor: pointer;
     display:flex;
     align-items:center;
@@ -182,9 +206,7 @@
     min-height:44px;
     transition: all 0.15s ease;
   }
-  .timeslot.available:hover {
-    background-color: rgba(255,255,255,0.12);
-  }
+
   .timeslot.booked {
     background-color: rgba(64,64,64,0.9);
     color:#ddd;
@@ -223,22 +245,22 @@
     align-items:center;
     border-radius:12px;
     margin-bottom:12px;
-    padding:14px 16px;
+    padding:14px 24px;
     color:#fff;
   }
   .selection-item .info {
     text-align:left;
     flex: 1;
-    font-size:18px;
+    font-size:16px;
     line-height:1.3;
     font-weight:600;
-    color: #fff;
+    color: #0a1a2f;
   }
   .selection-item .price {
     font-size:14px;
     opacity:0.95;
-    margin-left: 12px;
-    color: #fff;
+    margin-left: 14px;
+    color: #0a1a2f;
   }
   .selection-item button {
     background:none;
@@ -246,7 +268,6 @@
     color:#fff;
     text-decoration:underline;
     cursor:pointer;
-    margin-left:16px;
     font-size: 14px;
     padding: 4px 8px;
   }
@@ -260,6 +281,7 @@
     color:#fff;
     font-weight:bold;
     margin-top:20px;
+    margin-right:1px;
     padding-top: 12px;
     border-top: 1px solid rgba(255,255,255,0.2);
   }
@@ -298,17 +320,17 @@
 </style>
 </head>
 
-<!-- EmailJS SDK(必ず module の外) -->
+<!-- EmailJS SDK（必ず module の外） -->
 <script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
 <script>
-  // EmailJS 初期化(伏字のままです)
+  // EmailJS 初期化（伏字のままです）
   (function(){
-    emailjs.init("伏字");
+    emailjs.init("JRZlYnM7gukOpjDw9");
   })();
 
-  // EmailJS 送信用のグローバル関数(Service/Template は伏字)
+  // EmailJS 送信用のグローバル関数（Service/Template は伏字）
   window.sendBookingMail = async function(params) {
-    return emailjs.send("SERVICE_伏字", "TEMPLATE_伏字", params);
+    return emailjs.send("SERVICE_fm6jzqn", "TEMPLATE_63qq8aj", params);
   };
 </script>
 
@@ -337,7 +359,7 @@
 
 <div class="selection-summary" id="selectionSummary">
   <!-- 選択中リストがここに入る -->
-  <div class="total">合計:¥0(税込)</div>
+  <div class="total">合計:¥0（税込）</div>
 </div>
 
 <button class="proceed-btn">予約へ進む</button>
@@ -386,23 +408,25 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // Firebase config (伏字のままです)
+  // ===== Firebase 設定（あなたのプロジェクトのもの。すでに使っている値） =====
   const firebaseConfig = {
-    apiKey: "伏字",
-    authDomain: "伏字",
-    projectId: "伏字",
-    storageBucket: "伏字",
-    messagingSenderId: "伏字",
-    appId: "伏字"
+    apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
+    authDomain: "studio-rental-180df.firebaseapp.com",
+    projectId: "studio-rental-180df",
+    storageBucket: "studio-rental-180df.firebasestorage.app",
+    messagingSenderId: "485178815055",
+    appId: "1:485178815055:web:f91792229f8c359cf1303a",
+    measurementId: "G-EF147DP6ZB"
   };
+  
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // ===== ログイン状態チェック =====
+  // ===== ログイン状態チェック (リダイレクト無効化済み) =====
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      window.location.href = "login.html";
+      // window.location.href = "login.html"; // リダイレクトを無効化
     } else {
       document.getElementById("username").textContent = user.displayName || user.email;
     }
@@ -410,12 +434,14 @@
 
   window.logout = async function(){
     await signOut(auth);
-    window.location.href = "login.html";
+    // window.location.href = "login.html"; // リダイレクトを無効化
   };
 
-  // ===== カレンダー =====
-// ===== カレンダー =====
-// ... (中略) ...
+  // ===== カレンダー要素の取得 =====
+  const calendar = document.getElementById("calendar");
+  const monthLabel = document.getElementById("monthLabel");
+  const studioGrid = document.getElementById("studioGrid");
+  const selectionSummary = document.getElementById("selectionSummary");
 
   // 現在時刻を常に+9時間(日本時間)として扱うためのオフセット関数
   function getOffsetDate() {
@@ -428,10 +454,11 @@
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
   let selections = [];
+  let selectedDate = new Date(today); // 初期選択日を今日に設定
 
   const studios = ["A","B","C","EF","R"];
   const HOURS = [9,10,11,12,13,14,15,16,17,18,19,20,21];
-  const studioRates = { A:2000, B:3000, C:4000, EF:5000, R:6000 };
+  const studioRates = { A:1100, B:1100, C:1980, EF:2310, R:2090 };
   const studioColors = { A:"#cc7b9b", B:"#7aa6c7", C:"#7fc980", EF:"#7988c7", R:"#d9c46e" };
 
   // 予約可能期間の最大月 (現在の月を含めて7ヶ月先)
@@ -462,182 +489,195 @@
     renderCalendar();
   });
 
-  function renderCalendar(){
-    calendar.innerHTML = "";
-    const monthNames = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
-    monthLabel.textContent = `${currentYear}年${monthNames[currentMonth]}`;
+  function renderCalendar() {
+  calendar.innerHTML = "";
+  const monthNames = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+  monthLabel.textContent = `${currentYear}年${monthNames[currentMonth]}`;
 
-    // 月曜始まりに変更: 月,火,水,木,金,土,日
-    const dayNames = ["月","火","水","木","金","土","日"];
-    dayNames.forEach((d, i) => {
-      const hd = document.createElement("div");
-      hd.className = "day-header";
-      // 土曜日 (i=5) と日曜日 (i=6) の色付け
-      if (i === 5) hd.classList.add("sat");
-      if (i === 6) hd.classList.add("sun");
-      hd.textContent = d;
-      calendar.appendChild(hd);
-    });
+  // 月曜始まり
+  const dayNames = ["月","火","水","木","金","土","日"];
+  dayNames.forEach((d, i) => {
+    const hd = document.createElement("div");
+    hd.className = "day-header";
+    if (i === 5) hd.classList.add("sat");
+    if (i === 6) hd.classList.add("sun");
+    hd.textContent = d;
+    calendar.appendChild(hd);
+  });
 
-    // 曜日計算の修正: 日曜始まり(0)を月曜始まり(0)に変換
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay(); // 0(日)〜6(土)
-    const startDay = (firstDay === 0 ? 6 : firstDay - 1); // 0(月)〜6(日)
-    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
-    const totalCells = 42;
+  // 月曜始まり計算
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const startDay = (firstDay === 0 ? 6 : firstDay - 1);
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const totalCells = 42;
 
-    for (let i = 0; i < totalCells; i++){
-      const dayDiv = document.createElement("div");
-      dayDiv.className = "day";
-      const dayNum = i - startDay + 1; // startDay を使用
-      if (dayNum > 0 && dayNum <= daysInMonth){
-        dayDiv.textContent = dayNum;
-        const date = new Date(currentYear, currentMonth, dayNum);
-        const dow = date.getDay(); // 0(日)〜6(土)
-        
-        // 土曜日 (dow=6) と日曜日 (dow=0) の色付け
-        if (dow === 6) dayDiv.classList.add("sat");
-        if (dow === 0) dayDiv.classList.add("sun");
+  for (let i = 0; i < totalCells; i++) {
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "day";
 
-        // ... (以下、日付クリック時の処理など) ...
-        // ... (省略) ...
+    const dayNum = i - startDay + 1;
+    if (dayNum > 0 && dayNum <= daysInMonth) {
+      dayDiv.textContent = dayNum;
+      const date = new Date(currentYear, currentMonth, dayNum);
+      const dow = date.getDay();
+
+      // 土日色
+      if (dow === 6) dayDiv.classList.add("sat");
+      if (dow === 0) dayDiv.classList.add("sun");
+
+      // ▼ 選択されている日付なら光らせる
+      const dateStr = formatDate(date);
+      const hasSelection = selections.some(s => s.date === dateStr);
+      if (hasSelection) {
+        dayDiv.classList.add("has-selection");
       }
-      calendar.appendChild(dayDiv);
+
+      // ▼ クリックで選択切り替え
+      dayDiv.addEventListener("click", () => {
+        document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
+        dayDiv.classList.add("selected");
+        selectedDate = date;
+        renderStudios();
+        updateCalendarMarkers(); // ← 追加（光マーカー更新）
+      });
     }
-    
-    // ボタンの有効/無効制御
-    const currentMonthStart = new Date(currentYear, currentMonth, 1);
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    document.getElementById("prevMonth").disabled = (currentMonthStart <= todayStart);
-    document.getElementById("nextMonth").disabled = (currentMonthStart >= maxMonth);
+
+    calendar.appendChild(dayDiv);
   }
 
-  // initial render
-  window.addEventListener("load", () => {
-    selectedDate = new Date(today);
-    renderCalendar();
-    renderStudios();
-    renderSelections();
-  });
+  // 月移動制御
+  const currentMonthStart = new Date(currentYear, currentMonth, 1);
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  document.getElementById("prevMonth").disabled = (currentMonthStart <= todayStart);
+  document.getElementById("nextMonth").disabled = (currentMonthStart >= maxMonth);
+}
 
 
   // ===== 日付・スタジオの描画 =====
-  let selectedDate = new Date(today);
-  function renderStudios(){
-    studioGrid.innerHTML = "";
-    const times = HOURS.map(h => `${h}:00〜${h+1}:00`);
-    studios.forEach(studio => {
-      const col = document.createElement("div");
-      col.className = "studio-column";
-      const head = document.createElement("div");
-      head.className = `studio-header studio-${studio}`;
-      head.innerHTML = `${studio}<br>¥${studioRates[studio]}`;
-      col.appendChild(head);
+function renderStudios() {
+  // 選択している日付が無ければ処理中断（安全策）
+  if (!selectedDate) return;
 
-      // For each time slot we need to check Firestore whether it's reserved for selectedDate
-      times.forEach((timeStr, idx) => {
-        const hour = HOURS[idx];
-        const slot = document.createElement("div");
-        slot.className = "timeslot";
-        slot.dataset.studio = studio;
-        slot.dataset.hour = hour;
-        // initial content
-        slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span style="opacity:0.9">〇</span></div>`;
-        slot.style.backgroundColor = studioColors[studio] + "44"; // より明るく
-        // click behavior
+  // 例: selectedDate が Date オブジェクト → 表示用日付文字列
+  const dateStr = selectedDate.toDateString();
+
+  // ここで reservations（予約済データ）を使っているなら事前に取得しておく想定
+  // const reserved = ...;
+
+  // 新しいコンテナを DocumentFragment に作る（描画は最後に一回だけ）
+  const frag = document.createDocumentFragment();
+
+  const times = Array.from({ length: 15 }, (_, i) => {
+    const h = 7 + i;
+    return `${String(h).padStart(2, '0')}:00〜${String(h+1).padStart(2,'0')}:00`;
+  });
+
+  studios.forEach(studio => {
+    const col = document.createElement("div");
+    col.className = "studio-column";
+
+    const head = document.createElement("div");
+    head.className = `studio-header studio-${studio}`;
+    head.innerHTML = `${studio}<br>¥${studioRates[studio]}`;
+    // 明示的にスタジオカラーをヘッダにも反映（必要なら）
+    head.style.backgroundColor = studioColors[studio];
+    frag.appendChild(col);
+    col.appendChild(head);
+
+    times.forEach((timeStr, idx) => {
+      const hour = 7 + idx;
+      const slot = document.createElement("div");
+      slot.className = "timeslot";
+      // 初期コンテンツ（〇表記）
+     slot.innerHTML = `
+     <div style="text-align:center;">
+     <span style="font-weight: bold;">${timeStr}</span><br>
+     <span style="opacity:0.9">〇</span>
+     </div>
+     `;
+      // ここで予約済判定が可能なら isBooked を判定してクラス付与
+      // const isBooked = reserved && reserved.some(r => r.date === dateStr && r.studio === studio && r.hour === hour);
+      const isBooked = false; // いまは未実装なら false
+
+      if (isBooked) {
+        slot.classList.add("booked");
+        slot.innerHTML = `<div style="text-align:center;">${timeStr}<br><span>✕</span></div>`;
+        slot.style.backgroundColor = "rgba(64,64,64,0.9)";
+        slot.style.color = "#ddd";
+      } else {
+        slot.classList.add("available");
+        // 即座に背景色をつけても Fragment 内なので描画フリッカーが起きない
+        slot.style.backgroundColor = studioColors[studio];
+        slot.style.color = (/* 判読性 */ getContrastColor(studioColors[studio]) === 'dark') ? '#000' : '#000';
+        // クリック処理
         slot.addEventListener("click", () => {
-          // if already booked, do nothing
           if (slot.classList.contains("booked")) return;
-          // toggle selection
-          const dateStr = formatDate(selectedDate);
-          const existsIndex = selections.findIndex(s => s.date === dateStr && s.studio === studio && s.hour === hour);
+          const dateKey = selectedDate.toDateString();
+          const existsIndex = selections.findIndex(s => s.date === dateKey && s.studio === studio && s.hour === hour);
           if (existsIndex >= 0) {
-            selections.splice(existsIndex,1);
+            selections.splice(existsIndex, 1);
             slot.classList.remove("selected");
           } else {
-            selections.push({ date: dateStr, time: timeStr, studio, hour });
+            selections.push({ date: dateKey, time: timeStr, studio, hour });
             slot.classList.add("selected");
           }
           renderSelections();
           updateCalendarMarkers();
         });
+      }
 
-        col.appendChild(slot);
-      });
+      // 選択済みチェック（既に selections にあれば selected をつける）
+      const dateKey = selectedDate.toDateString();
+      if (selections.find(s => s.date === dateKey && s.studio === studio && s.hour === hour)) {
+        slot.classList.add("selected");
+      }
 
-      studioGrid.appendChild(col);
+      col.appendChild(slot);
     });
 
-    // After drawing all slots, update booked marks (async)
-    markBookedSlotsForSelectedDate();
-  }
+    frag.appendChild(col);
+  });
 
-  // mark bookedSlots by querying Firestore for selectedDate
-  async function markBookedSlotsForSelectedDate(){
-    try {
-      // early exit if no selectedDate
-      if (!selectedDate) return;
-      const dateStr = formatDate(selectedDate);
-      // Iterate DOM slots and check Firestore per slot (simple approach)
-      const slotEls = studioGrid.querySelectorAll(".studio-column");
-      for (let ci=0; ci<slotEls.length; ci++){
-        const col = slotEls[ci];
-        const studio = studios[ci];
-        const slots = col.querySelectorAll(".timeslot");
-        for (let si=0; si<slots.length; si++){
-          const hour = HOURS[si];
-          const id = `${studio}_${dateStr}_${hour}`;
-          try {
-            const snap = await getDoc(doc(db, "reservations", id));
-            const slotEl = slots[si];
-            if (snap.exists()) {
-              slotEl.classList.add("booked");
-              slotEl.innerHTML = `<div style="text-align:center;">${HOURS[si]}:00〜${HOURS[si]+1}:00<br><span style="opacity:0.9">✕</span></div>`;
-              slotEl.style.backgroundColor = "rgba(64,64,64,0.9)";
-            } else {
-              // if selected, show selected style
-              const dateStrSel = formatDate(selectedDate);
-              const isSelected = selections.some(s => s.date===dateStrSel && s.studio===studio && s.hour===hour);
-              const slotEl = slots[si];
-              if (isSelected) slotEl.classList.add("selected");
-              else slotEl.classList.remove("selected");
-              // ensure available mark
-              if (!slotEl.classList.contains("booked")) {
-                slotEl.innerHTML = `<div style="text-align:center;">${HOURS[si]}:00〜${HOURS[si]+1}:00<br><span style="opacity:0.9">〇</span></div>`;
-                slotEl.style.backgroundColor = studioColors[studio] + "44";
-              }
-            }
-          } catch(e) {
-            console.error("slot check error", e);
-          }
-        }
-      }
-    } catch(e) {
-      console.error("markBookedSlotsForSelectedDate error", e);
-    }
-  }
+  // まとめて差し替え（ここで初めて描画に反映される）
+  studioGrid.innerHTML = "";
+  studioGrid.appendChild(frag);
+}
+
+// 補助：カラー文字色のコントラストを返す（簡易）
+function getContrastColor(hex) {
+  // hex は "#rrggbb"
+  if (!hex || hex[0] !== '#') return 'dark';
+  const r = parseInt(hex.substr(1,2),16);
+  const g = parseInt(hex.substr(3,2),16);
+  const b = parseInt(hex.substr(5,2),16);
+  // YIQ
+  const yiq = (r*299 + g*587 + b*114) / 1000;
+  return yiq >= 128 ? 'light' : 'dark';
+}
+
 
   function formatDate(dt){
     return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
   }
 
   // カレンダーのマーカーを更新
-  function updateCalendarMarkers(){
-    const dayDivs = calendar.querySelectorAll(".day");
-    dayDivs.forEach(dayDiv => {
-      if (dayDiv.textContent.trim() === "") return;
-      const dayNum = parseInt(dayDiv.textContent);
-      if (isNaN(dayNum)) return;
-      const date = new Date(currentYear, currentMonth, dayNum);
-      const dateStr = formatDate(date);
-      const hasSelection = selections.some(s => s.date === dateStr);
-      if (hasSelection) {
-        dayDiv.classList.add("has-selection");
-      } else {
-        dayDiv.classList.remove("has-selection");
-      }
-    });
-  }
+function updateCalendarMarkers(){
+  const dayDivs = calendar.querySelectorAll(".day");
+  dayDivs.forEach(dayDiv => {
+    if (dayDiv.textContent.trim() === "") return;
+    const dayNum = parseInt(dayDiv.textContent);
+    if (isNaN(dayNum)) return;
+    const date = new Date(currentYear, currentMonth, dayNum);
+    const dateStr = formatDate(date);
+    const hasSelection = selections.some(s => s.date === dateStr);
+    if (hasSelection) {
+      dayDiv.classList.add("has-selection");
+    } else {
+      dayDiv.classList.remove("has-selection");
+    }
+  });
+}
 
   // ===== 選択リストの描画 =====
   function renderSelections(){
@@ -650,7 +690,8 @@
       heading.textContent = "選択中";
       heading.style.textAlign = "left";
       heading.style.color = "white";
-      heading.style.margin = "0 0 12px 0";
+      heading.style.margin = "0 0 0px 16px";
+      heading.style.letterSpacing = "2px";
       selectionSummary.appendChild(heading);
     }
 
@@ -660,17 +701,20 @@
       if (!grouped[s.date]) grouped[s.date] = [];
       grouped[s.date].push(s);
     });
-
-    Object.keys(grouped).sort().forEach(dateKey => {
+    Object.keys(grouped)
+  .sort((a, b) => new Date(a) - new Date(b))   // ← 追加・修正ポイント
+  .forEach(dateKey => {
       const dateGroup = document.createElement("div");
       dateGroup.className = "date-group";
       const title = document.createElement("div");
       const d = new Date(dateKey);
       const jp = ["日","月","火","水","木","金","土"][d.getDay()];
       title.className = "date-title";
-      title.textContent = `${dateKey}(${jp})`;
+      // ▼ 日本語表記にする
+      title.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${jp}）`;
+      // ▼ 日付表記のマージン設定
+      title.style.margin = "8px 0 6px 12px";
       dateGroup.appendChild(title);
-
       grouped[dateKey].forEach(sel => {
         const div = document.createElement("div");
         div.className = "selection-item";
@@ -678,7 +722,26 @@
         // info
         const info = document.createElement("div");
         info.className = "info";
-        info.innerHTML = `${sel.time}　B<br>¥${studioRates[sel.studio].toLocaleString()}`.replace("B", sel.studio);
+
+// ▼ 日本語の日付を作る
+const d2 = new Date(sel.date);
+const jpDay2 = ["日","月","火","水","木","金","土"][d2.getDay()];
+const dateLabel2 = `${d2.getFullYear()}年${d2.getMonth()+1}月${d2.getDate()}日（${jpDay2}）`;
+
+// ▼ スタジオ名を「スタジオB」形式に
+const studioLabel = `スタジオ${sel.studio}`;
+
+// ▼ 情報表示（利用時間・利用スタジオ）
+info.innerHTML = `
+  <div style="font-size: 20px; line-height: 1.2; color: #0a1a2f;">
+    ${sel.time}　
+    <span style="font-size: 20px;">${studioLabel}</span>
+  </div>
+  <div style="font-size: 13px; margin-left:2px; opacity: 0.9; color: #0a1a2f;">
+    ¥${studioRates[sel.studio].toLocaleString()}
+  </div>
+`;
+     
         div.appendChild(info);
         // delete link
         const btn = document.createElement("button");
@@ -697,7 +760,7 @@
     const total = selections.reduce((s,x)=> s + Number(studioRates[x.studio]), 0);
     const totalDiv = document.createElement("div");
     totalDiv.className = "total";
-    totalDiv.textContent = `合計:¥${total.toLocaleString()}(税込)`;
+    totalDiv.textContent = `合計:¥${total.toLocaleString()}（税込）`;
     selectionSummary.appendChild(totalDiv);
   }
 
@@ -811,7 +874,8 @@
 
   // initial render
   window.addEventListener("load", () => {
-    selectedDate = new Date(today);
+    // selectedDateは既に初期化済み
+    // selectedDate = new Date(today); // 不要
     renderCalendar();
     renderStudios();
     renderSelections();
@@ -822,3 +886,48 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
