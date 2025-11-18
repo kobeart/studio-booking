@@ -160,7 +160,11 @@
 .day.has-selection {
   background: rgba(255,255,255,0.18);
   border-radius: 6px;
-  animation: glowDay 1.8s ease-in-out infinite;
+  animation: pulseSelection 1.4s infinite alternate;
+}
+@keyframes pulseSelection {
+  0% { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
+  100% { box-shadow: 0 0 16px rgba(255,255,255,0.6); }
 }
 
 @keyframes glowDay {
@@ -887,6 +891,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
