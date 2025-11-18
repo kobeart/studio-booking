@@ -412,6 +412,14 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+  // ▼ 日付を "2025-11-17" 形式にする関数（必須）
+  function formatDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+  }
+  
   // ===== Firebase 設定（あなたのプロジェクトのもの。すでに使っている値） =====
   const firebaseConfig = {
     apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
@@ -906,6 +914,7 @@ info.innerHTML = `
 </script>
 </body>
 </html>
+
 
 
 
