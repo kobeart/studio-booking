@@ -157,22 +157,6 @@
   100% { background: rgba(255,255,255,0.10); }
 }
 
-.day.has-selection {
-  background: rgba(255,255,255,0.18);
-  border-radius: 6px;
-  animation: pulseSelection 1.4s infinite alternate;
-}
-@keyframes pulseSelection {
-  0% { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
-  100% { box-shadow: 0 0 16px rgba(255,255,255,0.6); }
-}
-
-@keyframes glowDay {
-  0%   { background: rgba(255,255,255,0.10); }
-  50%  { background: rgba(255,255,255,0.25); }
-  100% { background: rgba(255,255,255,0.10); }
-}
-  
   .studio-grid {
     display: flex;
     justify-content: center;
@@ -412,14 +396,6 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // ▼ 日付を "2025-11-17" 形式にする関数（必須）
-  function formatDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-  }
-  
   // ===== Firebase 設定（あなたのプロジェクトのもの。すでに使っている値） =====
   const firebaseConfig = {
     apiKey: "AIzaSyA4es-RnZfGenUPgJDzDFQaIh1LBNZRxYc",
@@ -501,78 +477,67 @@
     renderCalendar();
   });
 
-  // 共通で使う日付フォーマット（ゼロ埋め）
-  function pad(n){ return String(n).padStart(2,"0"); }
-  function formatDate(date){
-  // date は Date オブジェクトを想定
-  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
-  }
-  
-  function renderCalendar() {
-  calendar.innerHTML = "";
-  const monthNames = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
-  monthLabel.textContent = `${currentYear}年${monthNames[currentMonth]}`;
+  function renderCalendar(){
+    calendar.innerHTML = "";
+    const monthNames = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+    monthLabel.textContent = `${currentYear}年${monthNames[currentMonth]}`;
 
-  // 月曜始まり
-  const dayNames = ["月","火","水","木","金","土","日"];
-  dayNames.forEach((d, i) => {
-    const hd = document.createElement("div");
-    hd.className = "day-header";
-    if (i === 5) hd.classList.add("sat");
-    if (i === 6) hd.classList.add("sun");
-    hd.textContent = d;
-    calendar.appendChild(hd);
-  });
+    // 月曜始まりに変更: 月,火,水,木,金,土,日
+    const dayNames = ["月","火","水","木","金","土","日"];
+    dayNames.forEach((d, i) => {
+      const hd = document.createElement("div");
+      hd.className = "day-header";
+      // 土曜日 (i=5) と日曜日 (i=6) の色付け
+      if (i === 5) hd.classList.add("sat");
+      if (i === 6) hd.classList.add("sun");
+      hd.textContent = d;
+      calendar.appendChild(hd);
+    });
 
-  // 月曜始まり計算
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const startDay = (firstDay === 0 ? 6 : firstDay - 1);
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const totalCells = 42;
+    // 曜日計算の修正: 日曜始まり(0)を月曜始まり(0)に変換
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay(); // 0(日)〜6(土)
+    const startDay = (firstDay === 0 ? 6 : firstDay - 1); // 0(月)〜6(日)
+    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+    const totalCells = 42;
 
-  for (let i = 0; i < totalCells; i++) {
-    const dayDiv = document.createElement("div");
-    dayDiv.className = "day";
+    for (let i = 0; i < totalCells; i++){
+      const dayDiv = document.createElement("div");
+      dayDiv.className = "day";
+      const dayNum = i - startDay + 1; // startDay を使用
+      if (dayNum > 0 && dayNum <= daysInMonth){
+        dayDiv.textContent = dayNum;
+        const date = new Date(currentYear, currentMonth, dayNum);
+        const dow = date.getDay(); // 0(日)〜6(土)
+        
+        // 土曜日 (dow=6) と日曜日 (dow=0) の色付け
+        if (dow === 6) dayDiv.classList.add("sat");
+        if (dow === 0) dayDiv.classList.add("sun");
 
-    const dayNum = i - startDay + 1;
-    if (dayNum > 0 && dayNum <= daysInMonth) {
-      dayDiv.textContent = dayNum;
-      const date = new Date(currentYear, currentMonth, dayNum);
-      const dow = date.getDay();
+        // 選択がある日付にマーカーを付ける
+        const dateStr = formatDate(date);
+        const hasSelection = selections.some(s => s.date === dateStr);
+        if (hasSelection) {
+          dayDiv.classList.add("has-selection");
+        }
 
-      // 土日色
-      if (dow === 6) dayDiv.classList.add("sat");
-      if (dow === 0) dayDiv.classList.add("sun");
-
-      // ▼ 選択されている日付なら光らせる
-      const dateStr = formatDate(date);
-      const hasSelection = selections.some(s => s.date === dateStr);
-      if (hasSelection) {
-        dayDiv.classList.add("has-selection");
+        // 日付クリックイベントの再設定
+        dayDiv.addEventListener("click", () => {
+          document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
+          dayDiv.classList.add("selected");
+          selectedDate = date;
+          renderStudios();
+        });
       }
-
-      // ▼ クリックで選択切り替え
-      dayDiv.addEventListener("click", () => {
-        document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
-        dayDiv.classList.add("selected");
-        selectedDate = date;
-        renderStudios();
-        updateCalendarMarkers(); // ← 追加（光マーカー更新）
-      });
+      calendar.appendChild(dayDiv);
     }
-
-    calendar.appendChild(dayDiv);
+    
+    // ボタンの有効/無効制御
+    const currentMonthStart = new Date(currentYear, currentMonth, 1);
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    document.getElementById("prevMonth").disabled = (currentMonthStart <= todayStart);
+    document.getElementById("nextMonth").disabled = (currentMonthStart >= maxMonth);
   }
-
-  // 月移動制御
-  const currentMonthStart = new Date(currentYear, currentMonth, 1);
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), 1);
-
-  document.getElementById("prevMonth").disabled = (currentMonthStart <= todayStart);
-  document.getElementById("nextMonth").disabled = (currentMonthStart >= maxMonth);
-  updateCalendarMarkers(); // ← 月描画後に再適用（必須）
-}
-
 
   // ===== 日付・スタジオの描画 =====
 function renderStudios() {
@@ -682,15 +647,13 @@ function getContrastColor(hex) {
   }
 
   // カレンダーのマーカーを更新
-// ★ 日付の光りマーカーを更新（複数選択に対応）
-function updateCalendarMarkers() {
+ function updateCalendarMarkers() {
   const dayDivs = calendar.querySelectorAll(".day");
 
   dayDivs.forEach(dayDiv => {
-    const text = dayDiv.textContent.trim();
-    if (text === "") return;
+    if (dayDiv.textContent.trim() === "") return;
 
-    const dayNum = parseInt(text);
+    const dayNum = parseInt(dayDiv.textContent);
     if (isNaN(dayNum)) return;
 
     const date = new Date(currentYear, currentMonth, dayNum);
@@ -698,11 +661,10 @@ function updateCalendarMarkers() {
 
     const hasSelection = selections.some(s => s.date === dateStr);
 
-    // ▼ 予約が入っている日 → 光る（has-selection）
     if (hasSelection) {
-      dayDiv.classList.add("has-selection");
+      dayDiv.classList.add("selected");   // ← 光るクラス
     } else {
-      dayDiv.classList.remove("has-selection");
+      dayDiv.classList.remove("selected");
     }
   });
 }
@@ -914,10 +876,6 @@ info.innerHTML = `
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
