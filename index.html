@@ -121,15 +121,19 @@
   }
   .day.sat { color: #73b5ff; }
   .day.sun { color: #d4af37; }
-  .day.has-selection {
-    background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
-    box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
-  }
+	  .day.has-selection {
+	    background: rgba(255, 255, 255, 0.18);
+	    border-radius: 6px;
+	    animation: glowPulse 1.8s ease-in-out infinite;
+	    transition: background 0.3s ease;
+	    /* 白い光を強調するためのbox-shadowを追加 */
+	    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 
+	                0 0 20px rgba(255, 255, 255, 0.5);
+	  }
   .day.selected {
     background: #12233d;
     border: 2px solid rgba(255,255,255,0.7);
     box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.2);
-    animation: whiteGlow 2s infinite alternate;
     border-radius: 6px;
   }
   .day.sat.selected { color: #73b5ff !important; }
@@ -144,12 +148,6 @@
     }
   }
 /* ▼ 選択中の日を光らせる（アニメーション付き） */
-.day.selected {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
-  animation: glowPulse 1.8s ease-in-out infinite;
-  transition: background 0.3s ease;
-}
 
 @keyframes glowPulse {
   0%   { background: rgba(255,255,255,0.10); }
@@ -513,20 +511,32 @@
         if (dow === 6) dayDiv.classList.add("sat");
         if (dow === 0) dayDiv.classList.add("sun");
 
-        // 選択がある日付にマーカーを付ける
-        const dateStr = formatDate(date);
-        const hasSelection = selections.some(s => s.date === dateStr);
-        if (hasSelection) {
-          dayDiv.classList.add("has-selection");
-        }
-
-        // 日付クリックイベントの再設定
-        dayDiv.addEventListener("click", () => {
-          document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
-          dayDiv.classList.add("selected");
-          selectedDate = date;
-          renderStudios();
-        });
+	        // 選択がある日付にマーカーを付ける
+	        const dateStr = formatDate(date);
+	        const hasSelection = selections.some(s => s.date === dateStr);
+	        if (hasSelection) {
+	          dayDiv.classList.add("has-selection");
+	        } else {
+	          dayDiv.classList.remove("has-selection");
+	        }
+	
+	        // 選択中の日付に selected クラスを適用
+	        const selectedDateStr = formatDate(selectedDate);
+	        if (dateStr === selectedDateStr) {
+	          dayDiv.classList.add("selected");
+	        } else {
+	          dayDiv.classList.remove("selected");
+	        }
+	
+	        // 日付クリックイベントの再設定
+	        dayDiv.addEventListener("click", () => {
+	          // 既存の selected クラスを削除
+	          document.querySelectorAll(".day.selected").forEach(d => d.classList.remove("selected"));
+	          // クリックされた要素に selected クラスを追加
+	          dayDiv.classList.add("selected");
+	          selectedDate = date;
+	          renderStudios();
+	        });
       }
       calendar.appendChild(dayDiv);
     }
@@ -650,23 +660,31 @@ function getContrastColor(hex) {
  function updateCalendarMarkers() {
   const dayDivs = calendar.querySelectorAll(".day");
 
-  dayDivs.forEach(dayDiv => {
-    if (dayDiv.textContent.trim() === "") return;
-
-    const dayNum = parseInt(dayDiv.textContent);
-    if (isNaN(dayNum)) return;
-
-    const date = new Date(currentYear, currentMonth, dayNum);
-    const dateStr = formatDate(date);
-
-    const hasSelection = selections.some(s => s.date === dateStr);
-
-    if (hasSelection) {
-      dayDiv.classList.add("selected");   // ← 光るクラス
-    } else {
-      dayDiv.classList.remove("selected");
-    }
-  });
+	  dayDivs.forEach(dayDiv => {
+	    if (dayDiv.textContent.trim() === "") return;
+	
+	    const dayNum = parseInt(dayDiv.textContent);
+	    if (isNaN(dayNum)) return;
+	
+	    const date = new Date(currentYear, currentMonth, dayNum);
+	    const dateStr = formatDate(date);
+	
+	    const hasSelection = selections.some(s => s.date === dateStr);
+	
+	    if (hasSelection) {
+	      dayDiv.classList.add("has-selection"); // 選択があることを示すクラス
+	    } else {
+	      dayDiv.classList.remove("has-selection");
+	    }
+	
+	    // 選択中の日付（selectedDate）と一致する場合のみ selected クラスを適用
+	    const selectedDateStr = formatDate(selectedDate);
+	    if (dateStr === selectedDateStr) {
+	      dayDiv.classList.add("selected");
+	    } else {
+	      dayDiv.classList.remove("selected");
+	    }
+	  });
 }
 
   // ===== 選択リストの描画 =====
@@ -754,16 +772,31 @@ info.innerHTML = `
     selectionSummary.appendChild(totalDiv);
   }
 
-  function removeSelection(date, studio, hour){
-    selections = selections.filter(s => !(s.date===date && s.studio===studio && s.hour===hour));
-    renderSelections();
-    updateCalendarMarkers();
-    // 対応するスロットのselectedクラスを削除
-    const slotEl = studioGrid.querySelector(`.timeslot[data-studio="${studio}"][data-hour="${hour}"]`);
-    if (slotEl) {
-      slotEl.classList.remove("selected");
-    }
-  }
+	  function removeSelection(date, studio, hour){
+	    selections = selections.filter(s => !(s.date===date && s.studio===studio && s.hour===hour));
+	    renderSelections();
+	    updateCalendarMarkers();
+	    // 対応するスロットのselectedクラスを削除
+	    const slotEl = studioGrid.querySelector(`.timeslot[data-studio="${studio}"][data-hour="${hour}"]`);
+	    if (slotEl) {
+	      slotEl.classList.remove("selected");
+	    }
+	    // その日の選択が全て無くなった場合、カレンダーから has-selection クラスを削除
+	    if (!selections.some(s => s.date === date)) {
+	      // 現在表示されているカレンダーの日付要素をすべて取得
+	      const dayDivs = calendar.querySelectorAll(".day");
+	      dayDivs.forEach(dayDiv => {
+	        const dayNum = parseInt(dayDiv.textContent);
+	        if (isNaN(dayNum)) return;
+	        
+	        // 日付要素から日付を再構築し、削除対象の日付と一致するか確認
+	        const d = new Date(currentYear, currentMonth, dayNum);
+	        if (formatDate(d) === date) {
+	          dayDiv.classList.remove("has-selection");
+	        }
+	      });
+	    }
+	  }
 
   // open modal
   document.querySelector(".proceed-btn").addEventListener("click", () => {
@@ -921,4 +954,4 @@ info.innerHTML = `
 
 
 
-
+利用時間枠選択時カレンダーに印を付ける方法 - Manus
