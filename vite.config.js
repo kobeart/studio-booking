@@ -8,10 +8,6 @@ export default defineConfig({
 })
 ```
 
-### 修正後の再アップロード
-
-ファイルを保存 (`Ctrl` + `S`) したら、PowerShellに戻って以下の3つのコマンドを実行してください。これで修正版が公開されます。
-
 ```bash
 git add .
 git commit -m "fix: Add base path for GitHub Pages"
